@@ -12,6 +12,12 @@ from .config_utils import (
     create_experiment_dirs,
     print_config
 )
+from .device_utils import (
+    setup_device,
+    get_optimal_batch_size,
+    get_optimal_num_workers,
+    print_device_info
+)
 
 __all__ = [
     'load_config',
@@ -21,5 +27,9 @@ __all__ = [
     'save_config',
     'update_config_paths',
     'create_experiment_dirs',
-    'print_config'
+    'print_config',
+    'setup_device',
+    'get_optimal_batch_size',
+    'get_optimal_num_workers',
+    'print_device_info'
 ]
