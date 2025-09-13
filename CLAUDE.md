@@ -10,7 +10,11 @@ This is a singer classification project using the Artist20 dataset with 20 artis
 
 ### Environment Setup
 ```bash
+# Local development (CPU only)
 pip install -r requirements.txt
+
+# Google Colab (with GPU)
+# See COLAB_SETUP.md for detailed instructions
 ```
 
 ### Evaluation and Testing

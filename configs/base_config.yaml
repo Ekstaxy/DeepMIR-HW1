@@ -67,10 +67,11 @@ wandb:
 
 # Device settings
 device:
-  use_cuda: true
+  use_cuda: "auto"  # auto-detect GPU availability
   device_id: 0
-  num_workers: 4
+  num_workers: 2    # Reduced for Colab compatibility
   pin_memory: true
+  force_cpu: false  # Set to true for local development without GPU
 
 # Output paths
 paths:
