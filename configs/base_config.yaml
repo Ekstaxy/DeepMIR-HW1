@@ -1,0 +1,87 @@
+# Base Configuration for Singer Classification Project
+# This file contains common settings shared across all experiments
+
+# Project settings
+project:
+  name: "singer_classification"
+  version: "1.0"
+  author: "DeepMIR Student"
+  seed: 42
+
+# Dataset configuration
+dataset:
+  name: "artist20"
+  root_path: "data/raw/artist20"
+  train_json: "data/raw/artist20/train.json"
+  val_json: "data/raw/artist20/val.json"
+  test_dir: "data/raw/artist20/test"
+  num_classes: 20
+  sample_rate: 16000
+  channels: 1  # mono
+
+# Audio preprocessing
+audio:
+  sample_rate: 16000
+  n_fft: 2048
+  hop_length: 512
+  n_mels: 128
+  max_duration: 30.0  # seconds
+  normalize: true
+
+# Data splitting
+data_split:
+  train_ratio: 0.8
+  val_ratio: 0.2
+  test_ratio: 0.0  # test set is predefined
+  stratify: true
+
+# Training settings
+training:
+  batch_size: 32
+  num_epochs: 100
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  early_stopping_patience: 10
+  save_best_only: true
+
+# Evaluation settings
+evaluation:
+  metrics: ["top1_accuracy", "top3_accuracy", "confusion_matrix"]
+  save_predictions: true
+  save_probabilities: false
+
+# Logging and experiment tracking
+logging:
+  level: "INFO"
+  save_logs: true
+  log_dir: "results/logs"
+  experiment_name: null  # will be set automatically
+
+# WandB settings
+wandb:
+  project: "singer_classification"
+  entity: null  # set your wandb username here
+  log_model: false
+  log_gradients: false
+  log_freq: 10
+
+# Device settings
+device:
+  use_cuda: true
+  device_id: 0
+  num_workers: 4
+  pin_memory: true
+
+# Output paths
+paths:
+  checkpoints: "results/checkpoints"
+  predictions: "results/predictions"
+  visualizations: "results/visualizations"
+  processed_data: "data/processed"
+  features: "data/processed/features"
+
+# Reproducibility
+reproducibility:
+  deterministic: true
+  benchmark: false
+  set_seed_everywhere: true
