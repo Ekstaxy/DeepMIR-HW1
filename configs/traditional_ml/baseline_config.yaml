@@ -1,0 +1,123 @@
+# Traditional Machine Learning Configuration
+# Inherits from base_config.yaml
+
+defaults:
+  - /base_config
+
+# Override base settings for traditional ML
+experiment:
+  type: "traditional_ml"
+  name: "baseline_traditional"
+  description: "Baseline traditional ML with hand-crafted features"
+
+# Feature extraction settings
+features:
+  # Audio features to extract
+  extract_features:
+    - "mfcc"
+    - "spectral_centroid"
+    - "spectral_rolloff"
+    - "spectral_bandwidth"
+    - "zero_crossing_rate"
+    - "tempo"
+    - "chroma"
+    - "tonnetz"
+
+  # MFCC settings
+  mfcc:
+    n_mfcc: 13
+    n_fft: 2048
+    hop_length: 512
+    delta: true      # include delta features
+    delta2: true     # include delta-delta features
+
+  # Spectral features
+  spectral:
+    n_fft: 2048
+    hop_length: 512
+
+  # Chroma features
+  chroma:
+    n_chroma: 12
+    n_fft: 2048
+    hop_length: 512
+
+  # Tonnetz features
+  tonnetz:
+    n_fft: 2048
+    hop_length: 512
+
+# Feature preprocessing
+preprocessing:
+  # Aggregation methods for time-series features
+  aggregation:
+    methods: ["mean", "std", "min", "max", "median"]
+
+  # Normalization
+  normalization:
+    method: "standard"  # standard, minmax, robust
+    per_feature: true
+
+  # Dimensionality reduction
+  dimensionality_reduction:
+    method: null  # pca, lda, null
+    n_components: 0.95  # keep 95% variance for PCA
+
+# Model configurations
+models:
+  # K-Nearest Neighbors
+  knn:
+    n_neighbors: [3, 5, 7, 11, 15]
+    weights: ["uniform", "distance"]
+    metric: ["euclidean", "manhattan", "cosine"]
+
+  # Support Vector Machine
+  svm:
+    C: [0.1, 1.0, 10.0, 100.0]
+    kernel: ["rbf", "linear", "poly"]
+    gamma: ["scale", "auto", 0.001, 0.01, 0.1]
+
+  # Random Forest
+  random_forest:
+    n_estimators: [100, 200, 300, 500]
+    max_depth: [10, 20, 30, null]
+    min_samples_split: [2, 5, 10]
+    min_samples_leaf: [1, 2, 4]
+
+  # Gradient Boosting
+  gradient_boosting:
+    n_estimators: [100, 200, 300]
+    learning_rate: [0.01, 0.1, 0.2]
+    max_depth: [3, 5, 7]
+
+  # Logistic Regression
+  logistic_regression:
+    C: [0.1, 1.0, 10.0, 100.0]
+    penalty: ["l1", "l2", "elasticnet"]
+    solver: ["liblinear", "saga"]
+
+# Cross-validation settings
+cross_validation:
+  method: "stratified_kfold"
+  n_splits: 5
+  shuffle: true
+
+# Hyperparameter tuning
+hyperparameter_tuning:
+  method: "grid_search"  # grid_search, random_search, bayesian
+  scoring: "accuracy"
+  cv_folds: 3
+  n_jobs: -1
+  verbose: 1
+
+# Training overrides for traditional ML
+training:
+  batch_size: null  # not applicable for traditional ML
+  num_epochs: null  # not applicable for traditional ML
+  learning_rate: null  # not applicable for traditional ML
+
+# Feature caching
+caching:
+  cache_features: true
+  cache_dir: "data/processed/feature_cache"
+  force_recompute: false

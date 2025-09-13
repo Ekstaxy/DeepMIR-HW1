@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data files
+data/raw/
+*.mp3
+*.wav
+*.flac
+
+# Model checkpoints
+results/checkpoints/*.pt
+results/checkpoints/*.pth
+results/checkpoints/*.ckpt
+
+# Logs
+results/logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+venv/
+env/
