@@ -416,7 +416,7 @@ class AudioFeatureExtractor:
 
 def extract_features_from_dataset(dataset, config, save_path: Optional[str] = None):
     """
-    Extract features from entire dataset.
+    Extract features from entire dataset one sample at a time to minimize RAM usage.
 
     Args:
         dataset: Dataset object
@@ -426,32 +426,45 @@ def extract_features_from_dataset(dataset, config, save_path: Optional[str] = No
     Returns:
         Tuple of (features, labels)
     """
+    import gc
     logger.info("Starting feature extraction from dataset...")
 
     # Initialize feature extractor
     feature_extractor = AudioFeatureExtractor(config)
 
-    # Extract audio data and labels from dataset
-    audio_list = []
+    features_list = []
     labels = []
 
-    logger.info(f"Processing {len(dataset)} samples...")
-    for i, (audio, label) in enumerate(dataset):
-        # Convert tensor to numpy array if needed
-        if isinstance(audio, torch.Tensor):
-            audio = audio.numpy()
-        audio_list.append(audio)
-        labels.append(label)
+    logger.info(f"Processing {len(dataset)} samples one at a time...")
 
-        if (i + 1) % 100 == 0:
-            logger.info(f"Loaded {i + 1}/{len(dataset)} samples")
+    for i in range(len(dataset)):
+        try:
+            # Load one sample at a time
+            audio, label = dataset[i]
 
-    # Convert labels to numpy array
+            # Convert tensor to numpy array if needed
+            if isinstance(audio, torch.Tensor):
+                audio = audio.numpy()
+
+            # Extract features for this single sample
+            sample_features = feature_extractor.extract_features(audio)
+            features_list.append(sample_features)
+            labels.append(label)
+
+            # Clean up immediately
+            del audio, sample_features
+            gc.collect()
+
+            if (i + 1) % 100 == 0:
+                logger.info(f"Processed {i + 1}/{len(dataset)} samples")
+
+        except Exception as e:
+            logger.warning(f"Failed to process sample {i}: {e}")
+            continue
+
+    # Convert to arrays
+    features = np.stack(features_list, axis=0)
     labels = np.array(labels)
-
-    # Extract features from all audio samples
-    logger.info("Extracting features...")
-    features = feature_extractor.extract_features_batch(audio_list)
 
     logger.info(f"Feature extraction complete. Shape: {features.shape}")
 
