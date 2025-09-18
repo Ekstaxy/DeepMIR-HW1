@@ -10,7 +10,6 @@ import logging
 from pathlib import Path
 import hydra
 from omegaconf import DictConfig
-import wandb
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -18,8 +17,8 @@ sys.path.append(str(project_root))
 
 from models.traditional.ml_models import HyperparameterTuner
 from models.traditional.feature_extractors import AudioFeatureExtractor, extract_features_from_dataset
-from data.datasets import AudioDataset
-from experiments.tracking import setup_wandb, log_metrics
+from data.datasets import Artist20Dataset
+from experiments.tracking import ExperimentTracker
 from experiments.logger_utils import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -31,14 +30,19 @@ def main(config: DictConfig):
     setup_logging(config)
     logger.info("Starting hyperparameter tuning...")
 
-    # Setup wandb if enabled
-    if config.wandb.project:
-        setup_wandb(config)
+    # Initialize experiment tracker
+    tracker = ExperimentTracker(
+        config=config,
+        experiment_name=f"hyperparameter_tuning_{config.experiment.name}",
+        tags=["traditional_ml", "hyperparameter_tuning"],
+        notes="Hyperparameter tuning for traditional ML models",
+        use_wandb=bool(config.wandb.project)
+    )
 
     try:
         # Load training dataset
         logger.info("Loading training dataset...")
-        train_dataset = AudioDataset(config.dataset.train_json, config)
+        train_dataset = Artist20Dataset(config.dataset.train_json, config)
         logger.info(f"Loaded {len(train_dataset)} training samples")
 
         # Extract features
@@ -75,12 +79,11 @@ def main(config: DictConfig):
                     logger.info(f"  {param}: {value}")
                 logger.info(f"Best cross-validation score: {results['best_score']:.4f}")
 
-                # Log to wandb
-                if wandb.run is not None:
-                    log_metrics({
-                        f'{model_type}/best_cv_score': results['best_score'],
-                        f'{model_type}/best_params': results['best_params']
-                    })
+                # Log to tracker
+                tracker.log_metrics({
+                    f'{model_type}/best_cv_score': results['best_score'],
+                    f'{model_type}/best_params': str(results['best_params'])
+                })
 
             except Exception as e:
                 logger.error(f"Failed to tune {model_type}: {e}")
@@ -121,9 +124,8 @@ def main(config: DictConfig):
         raise
 
     finally:
-        # Clean up wandb
-        if wandb.run is not None:
-            wandb.finish()
+        # Finish experiment tracking
+        tracker.finish()
 
 if __name__ == "__main__":
     main()

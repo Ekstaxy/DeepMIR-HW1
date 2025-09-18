@@ -11,7 +11,6 @@ from pathlib import Path
 import numpy as np
 import hydra
 from omegaconf import DictConfig
-import wandb
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, classification_report
@@ -22,8 +21,8 @@ sys.path.append(str(project_root))
 
 from models.traditional.ml_models import create_model, ModelEvaluator
 from models.traditional.feature_extractors import AudioFeatureExtractor, extract_features_from_dataset
-from data.datasets import AudioDataset
-from experiments.tracking import setup_wandb, log_metrics
+from data.datasets import Artist20Dataset
+from experiments.tracking import ExperimentTracker
 from experiments.logger_utils import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -53,14 +52,19 @@ def main(config: DictConfig):
     setup_logging(config)
     logger.info("Starting model evaluation...")
 
-    # Setup wandb if enabled
-    if config.wandb.project:
-        setup_wandb(config)
+    # Initialize experiment tracker
+    tracker = ExperimentTracker(
+        config=config,
+        experiment_name=f"model_evaluation_{config.experiment.name}",
+        tags=["traditional_ml", "evaluation"],
+        notes="Comprehensive evaluation of trained traditional ML models",
+        use_wandb=bool(config.wandb.project)
+    )
 
     try:
         # Load validation dataset
         logger.info("Loading validation dataset...")
-        val_dataset = AudioDataset(config.dataset.val_json, config)
+        val_dataset = Artist20Dataset(config.dataset.val_json, config)
         logger.info(f"Loaded {len(val_dataset)} validation samples")
 
         # Extract features
@@ -130,16 +134,15 @@ def main(config: DictConfig):
                 logger.info(f"  Top-3 Accuracy: {metrics['top3_accuracy']:.4f}")
                 logger.info(f"  Final Score: {metrics['final_score']:.4f}")
 
-                # Log to wandb
-                if wandb.run is not None:
-                    log_metrics({
-                        f'{model_type}/eval_top1_accuracy': metrics['top1_accuracy'],
-                        f'{model_type}/eval_top3_accuracy': metrics['top3_accuracy'],
-                        f'{model_type}/eval_final_score': metrics['final_score']
-                    })
+                # Log to tracker
+                tracker.log_metrics({
+                    f'{model_type}/eval_top1_accuracy': metrics['top1_accuracy'],
+                    f'{model_type}/eval_top3_accuracy': metrics['top3_accuracy'],
+                    f'{model_type}/eval_final_score': metrics['final_score']
+                })
 
-                    # Log confusion matrix image
-                    wandb.log({f'{model_type}/confusion_matrix': wandb.Image(str(cm_path))})
+                # Log confusion matrix image
+                tracker.log_image(str(cm_path), f'{model_type}/confusion_matrix', f'Confusion Matrix - {model_type.upper()}')
 
                 all_results[model_type] = {
                     'metrics': metrics,
@@ -194,9 +197,8 @@ def main(config: DictConfig):
         raise
 
     finally:
-        # Clean up wandb
-        if wandb.run is not None:
-            wandb.finish()
+        # Finish experiment tracking
+        tracker.finish()
 
 if __name__ == "__main__":
     main()
