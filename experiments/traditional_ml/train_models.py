@@ -31,8 +31,21 @@ def load_datasets(config):
     """Load training, validation, and test datasets."""
     logger.info("Loading datasets...")
 
-    train_dataset = Artist20Dataset(config.dataset.train_json, root_dir=config.dataset.root_path, sample_rate=config.dataset.sample_rate)
-    val_dataset = Artist20Dataset(config.dataset.val_json, root_dir=config.dataset.root_path, sample_rate=config.dataset.sample_rate)
+    # Load datasets with memory-efficient settings
+    train_dataset = Artist20Dataset(
+        config.dataset.train_json,
+        root_dir=config.dataset.root_path,
+        sample_rate=config.dataset.sample_rate,
+        cache_audio=False,  # Don't cache audio in memory
+        validate_files=False  # Skip validation to avoid loading all files
+    )
+    val_dataset = Artist20Dataset(
+        config.dataset.val_json,
+        root_dir=config.dataset.root_path,
+        sample_rate=config.dataset.sample_rate,
+        cache_audio=False,  # Don't cache audio in memory
+        validate_files=False  # Skip validation to avoid loading all files
+    )
     test_files = list(Path(config.dataset.test_dir).glob("*.mp3"))
 
     logger.info(f"Loaded {len(train_dataset)} training samples")
