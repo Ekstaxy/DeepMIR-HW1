@@ -12,7 +12,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class MFCCExtractor:
     """Extract MFCC features from audio."""
 
@@ -73,7 +72,6 @@ class MFCCExtractor:
             features.append(delta2_features)
 
         return np.concatenate(features, axis=0)
-
 
 class SpectralFeaturesExtractor:
     """Extract spectral features from audio."""
@@ -137,7 +135,6 @@ class SpectralFeaturesExtractor:
 
         return features
 
-
 class ChromaExtractor:
     """Extract chroma features from audio."""
 
@@ -179,7 +176,6 @@ class ChromaExtractor:
             n_fft=self.n_fft,
             hop_length=self.hop_length
         )
-
 
 class TonnetzExtractor:
     """Extract tonnetz (tonal centroid) features from audio."""
@@ -223,8 +219,6 @@ class TonnetzExtractor:
             sr=self.sample_rate,
             chroma=chroma
         )
-
-
 
 class AudioFeatureExtractor:
     """Unified audio feature extractor for traditional ML."""
@@ -281,7 +275,8 @@ class AudioFeatureExtractor:
             features.append(mfcc_features)
 
         if 'spectral' in self.config.features.extract_features:
-            spectral_features = self.spectral_extractor.extract(audio)
+            spectral_features_dict = self.spectral_extractor.extract(audio)
+            spectral_features = np.concatenate(list(spectral_features_dict.values()), axis=0)
             features.append(spectral_features)
 
         if 'chroma' in self.config.features.extract_features:
@@ -470,5 +465,4 @@ def extract_features_from_dataset(dataset, config, save_path: Optional[str] = No
 
 # Example usage template
 if __name__ == "__main__":
-    # TODO: Example of how to use the feature extractors
     pass

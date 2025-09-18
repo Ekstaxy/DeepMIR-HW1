@@ -7,7 +7,6 @@ from .feature_extractors import (
     SpectralFeaturesExtractor,
     ChromaExtractor,
     TonnetzExtractor,
-    TempoExtractor,
     AudioFeatureExtractor,
     extract_features_from_dataset
 )
@@ -17,7 +16,6 @@ __all__ = [
     'SpectralFeaturesExtractor',
     'ChromaExtractor',
     'TonnetzExtractor',
-    'TempoExtractor',
     'AudioFeatureExtractor',
     'extract_features_from_dataset'
 ]
