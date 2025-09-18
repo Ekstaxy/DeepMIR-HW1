@@ -416,7 +416,7 @@ class AudioFeatureExtractor:
 
 def extract_features_from_dataset(dataset, config, save_path: Optional[str] = None):
     """
-    Extract features from entire dataset using 200-sample batches with RAM clearing.
+    Extract features from entire dataset.
 
     Args:
         dataset: Dataset object
@@ -426,26 +426,22 @@ def extract_features_from_dataset(dataset, config, save_path: Optional[str] = No
     Returns:
         Tuple of (features, labels)
     """
-    import gc
     logger.info("Starting feature extraction from dataset...")
 
     # Initialize feature extractor
     feature_extractor = AudioFeatureExtractor(config)
 
-    batch_size = 200
+    # Process dataset in 500-sample batches to prevent RAM overflow
     all_features = []
     all_labels = []
+    batch_size = 500
 
     logger.info(f"Processing {len(dataset)} samples in batches of {batch_size}...")
 
     for batch_start in range(0, len(dataset), batch_size):
         batch_end = min(batch_start + batch_size, len(dataset))
-        batch_num = batch_start // batch_size + 1
-        total_batches = (len(dataset) - 1) // batch_size + 1
 
-        logger.info(f"Processing batch {batch_num}/{total_batches} (samples {batch_start}-{batch_end-1})")
-
-        # Extract audio data and labels for current batch
+        # Load current batch
         audio_list = []
         labels = []
 
@@ -457,25 +453,20 @@ def extract_features_from_dataset(dataset, config, save_path: Optional[str] = No
             audio_list.append(audio)
             labels.append(label)
 
-        # Convert labels to numpy array
-        labels = np.array(labels)
+        logger.info(f"Loaded batch {batch_start//batch_size + 1}/{(len(dataset)-1)//batch_size + 1} ({batch_end - batch_start} samples)")
 
-        # Extract features from current batch
-        logger.info(f"Extracting features for batch {batch_num}...")
+        # Convert labels and extract features for this batch
+        labels = np.array(labels)
         batch_features = feature_extractor.extract_features_batch(audio_list)
 
-        # Store batch results
+        # Store results
         all_features.append(batch_features)
         all_labels.append(labels)
 
-        # Clear RAM immediately after processing batch
-        del audio_list, batch_features, labels
-        gc.collect()
+        # Clear batch memory
+        del audio_list, labels, batch_features
 
-        logger.info(f"Completed batch {batch_num}/{total_batches}, RAM cleared")
-
-    # Combine all batch results
-    logger.info("Combining all batch results...")
+    # Combine all batches
     features = np.vstack(all_features)
     labels = np.concatenate(all_labels)
 
@@ -485,8 +476,7 @@ def extract_features_from_dataset(dataset, config, save_path: Optional[str] = No
     if save_path:
         metadata = {
             'dataset_size': len(dataset),
-            'extraction_timestamp': str(np.datetime64('now')),
-            'batch_size': batch_size
+            'extraction_timestamp': str(np.datetime64('now'))
         }
         feature_extractor.save_features(features, labels, save_path, metadata)
 
