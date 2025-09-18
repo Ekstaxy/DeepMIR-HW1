@@ -11,7 +11,6 @@ from pathlib import Path
 import numpy as np
 import hydra
 from omegaconf import DictConfig
-import wandb
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -23,7 +22,7 @@ from models.traditional.ml_models import (
 )
 from models.traditional.feature_extractors import AudioFeatureExtractor, extract_features_from_dataset
 from data.datasets import Artist20Dataset
-from experiments.tracking import setup_wandb, log_metrics
+from experiments.tracking import ExperimentTracker
 from experiments.logger_utils import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -164,9 +163,14 @@ def main(config: DictConfig):
     setup_logging(config)
     logger.info("Starting traditional ML training...")
 
-    # Setup wandb if enabled
-    if config.wandb.project:
-        setup_wandb(config)
+    # Initialize experiment tracker
+    tracker = ExperimentTracker(
+        config=config,
+        experiment_name=f"traditional_ml_{config.experiment.name}",
+        tags=["traditional_ml", "classification"],
+        notes="Training k-NN, SVM, and Random Forest classifiers",
+        use_wandb=bool(config.wandb.project)
+    )
 
     try:
         # Step 1: Load datasets
@@ -206,13 +210,12 @@ def main(config: DictConfig):
                 logger.info(f"  Top-3 Accuracy: {metrics['top3_accuracy']:.4f}")
                 logger.info(f"  Final Score: {metrics['final_score']:.4f}")
 
-                # Log to wandb
-                if wandb.run is not None:
-                    log_metrics({
-                        f'{model_type}/top1_accuracy': metrics['top1_accuracy'],
-                        f'{model_type}/top3_accuracy': metrics['top3_accuracy'],
-                        f'{model_type}/final_score': metrics['final_score']
-                    })
+                # Log to tracker
+                tracker.log_metrics({
+                    f'{model_type}/top1_accuracy': metrics['top1_accuracy'],
+                    f'{model_type}/top3_accuracy': metrics['top3_accuracy'],
+                    f'{model_type}/final_score': metrics['final_score']
+                })
 
             except Exception as e:
                 logger.error(f"Failed to train {model_type}: {e}")
@@ -238,9 +241,8 @@ def main(config: DictConfig):
         raise
 
     finally:
-        # Clean up wandb
-        if wandb.run is not None:
-            wandb.finish()
+        # Finish experiment tracking
+        tracker.finish()
 
 if __name__ == "__main__":
     main()
