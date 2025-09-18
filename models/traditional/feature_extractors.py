@@ -54,7 +54,7 @@ class MFCCExtractor:
             MFCC features of shape (n_features, n_frames)
         """
         mfcc_features = librosa.feature.mfcc(
-            audio,
+            y=audio,
             sr=self.sample_rate,
             n_mfcc=self.n_mfcc,
             n_fft=self.n_fft,
@@ -437,6 +437,9 @@ def extract_features_from_dataset(dataset, config, save_path: Optional[str] = No
 
     logger.info(f"Processing {len(dataset)} samples...")
     for i, (audio, label) in enumerate(dataset):
+        # Convert tensor to numpy array if needed
+        if isinstance(audio, torch.Tensor):
+            audio = audio.numpy()
         audio_list.append(audio)
         labels.append(label)
 

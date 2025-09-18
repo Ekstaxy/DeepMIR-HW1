@@ -3,6 +3,7 @@
 
 defaults:
   - /base_config
+  - _self_
 
 # Override base settings for traditional ML
 experiment:

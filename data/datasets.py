@@ -223,7 +223,6 @@ class Artist20Dataset(Dataset):
             'relative_path': self.file_paths[file_idx]
         }
 
-
 class Artist20TestDataset(Dataset):
     """Dataset class for Artist20 test data."""
 
@@ -321,7 +320,6 @@ class Artist20TestDataset(Dataset):
             'file_path': self.file_paths[idx],
             'test_id': self.test_ids[idx]
         }
-
 
 class CachedDataset(Dataset):
     """Dataset wrapper that caches preprocessed features."""
