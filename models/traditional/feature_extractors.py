@@ -414,15 +414,14 @@ class AudioFeatureExtractor:
         finally:
             data.close()
 
-def extract_features_from_dataset(dataset, config, save_path: Optional[str] = None, batch_size: int = 50):
+def extract_features_from_dataset(dataset, config, save_path: Optional[str] = None):
     """
-    Extract features from entire dataset in small batches to balance speed and memory usage.
+    Extract features from entire dataset using 200-sample batches with RAM clearing.
 
     Args:
         dataset: Dataset object
         config: Configuration object
         save_path: Optional path to save features
-        batch_size: Number of samples to process at once (default: 50)
 
     Returns:
         Tuple of (features, labels)
@@ -433,6 +432,7 @@ def extract_features_from_dataset(dataset, config, save_path: Optional[str] = No
     # Initialize feature extractor
     feature_extractor = AudioFeatureExtractor(config)
 
+    batch_size = 200
     all_features = []
     all_labels = []
 
@@ -445,40 +445,39 @@ def extract_features_from_dataset(dataset, config, save_path: Optional[str] = No
 
         logger.info(f"Processing batch {batch_num}/{total_batches} (samples {batch_start}-{batch_end-1})")
 
-        # Load batch of audio data
-        batch_audio = []
-        batch_labels = []
+        # Extract audio data and labels for current batch
+        audio_list = []
+        labels = []
 
         for i in range(batch_start, batch_end):
-            try:
-                audio, label = dataset[i]
-                # Convert tensor to numpy array if needed
-                if isinstance(audio, torch.Tensor):
-                    audio = audio.numpy()
-                batch_audio.append(audio)
-                batch_labels.append(label)
-            except Exception as e:
-                logger.warning(f"Failed to load sample {i}: {e}")
-                continue
+            audio, label = dataset[i]
+            # Convert tensor to numpy array if needed
+            if isinstance(audio, torch.Tensor):
+                audio = audio.numpy()
+            audio_list.append(audio)
+            labels.append(label)
 
-        if not batch_audio:
-            logger.warning(f"No valid samples in batch {batch_num}")
-            continue
+        # Convert labels to numpy array
+        labels = np.array(labels)
 
         # Extract features from current batch
-        batch_features = feature_extractor.extract_features_batch(batch_audio)
-        all_features.append(batch_features)
-        all_labels.extend(batch_labels)
+        logger.info(f"Extracting features for batch {batch_num}...")
+        batch_features = feature_extractor.extract_features_batch(audio_list)
 
-        # Clean up batch data to free memory
-        del batch_audio, batch_features
+        # Store batch results
+        all_features.append(batch_features)
+        all_labels.append(labels)
+
+        # Clear RAM immediately after processing batch
+        del audio_list, batch_features, labels
         gc.collect()
 
-        logger.info(f"Completed batch {batch_num}/{total_batches}")
+        logger.info(f"Completed batch {batch_num}/{total_batches}, RAM cleared")
 
-    # Combine all batch features
+    # Combine all batch results
+    logger.info("Combining all batch results...")
     features = np.vstack(all_features)
-    labels = np.array(all_labels)
+    labels = np.concatenate(all_labels)
 
     logger.info(f"Feature extraction complete. Shape: {features.shape}")
 
