@@ -10,12 +10,6 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
-# Data files
-data/raw/
-*.mp3
-*.wav
-*.flac
-
 # Model checkpoints
 results/checkpoints/*.pt
 results/checkpoints/*.pth
