@@ -414,14 +414,15 @@ class AudioFeatureExtractor:
         finally:
             data.close()
 
-def extract_features_from_dataset(dataset, config, save_path: Optional[str] = None):
+def extract_features_from_dataset(dataset, config, save_path: Optional[str] = None, batch_size: int = 50):
     """
-    Extract features from entire dataset one sample at a time to minimize RAM usage.
+    Extract features from entire dataset in small batches to balance speed and memory usage.
 
     Args:
         dataset: Dataset object
         config: Configuration object
         save_path: Optional path to save features
+        batch_size: Number of samples to process at once (default: 50)
 
     Returns:
         Tuple of (features, labels)
@@ -432,39 +433,52 @@ def extract_features_from_dataset(dataset, config, save_path: Optional[str] = No
     # Initialize feature extractor
     feature_extractor = AudioFeatureExtractor(config)
 
-    features_list = []
-    labels = []
+    all_features = []
+    all_labels = []
 
-    logger.info(f"Processing {len(dataset)} samples one at a time...")
+    logger.info(f"Processing {len(dataset)} samples in batches of {batch_size}...")
 
-    for i in range(len(dataset)):
-        try:
-            # Load one sample at a time
-            audio, label = dataset[i]
+    for batch_start in range(0, len(dataset), batch_size):
+        batch_end = min(batch_start + batch_size, len(dataset))
+        batch_num = batch_start // batch_size + 1
+        total_batches = (len(dataset) - 1) // batch_size + 1
 
-            # Convert tensor to numpy array if needed
-            if isinstance(audio, torch.Tensor):
-                audio = audio.numpy()
+        logger.info(f"Processing batch {batch_num}/{total_batches} (samples {batch_start}-{batch_end-1})")
 
-            # Extract features for this single sample
-            sample_features = feature_extractor.extract_features(audio)
-            features_list.append(sample_features)
-            labels.append(label)
+        # Load batch of audio data
+        batch_audio = []
+        batch_labels = []
 
-            # Clean up immediately
-            del audio, sample_features
-            gc.collect()
+        for i in range(batch_start, batch_end):
+            try:
+                audio, label = dataset[i]
+                # Convert tensor to numpy array if needed
+                if isinstance(audio, torch.Tensor):
+                    audio = audio.numpy()
+                batch_audio.append(audio)
+                batch_labels.append(label)
+            except Exception as e:
+                logger.warning(f"Failed to load sample {i}: {e}")
+                continue
 
-            if (i + 1) % 100 == 0:
-                logger.info(f"Processed {i + 1}/{len(dataset)} samples")
-
-        except Exception as e:
-            logger.warning(f"Failed to process sample {i}: {e}")
+        if not batch_audio:
+            logger.warning(f"No valid samples in batch {batch_num}")
             continue
 
-    # Convert to arrays
-    features = np.stack(features_list, axis=0)
-    labels = np.array(labels)
+        # Extract features from current batch
+        batch_features = feature_extractor.extract_features_batch(batch_audio)
+        all_features.append(batch_features)
+        all_labels.extend(batch_labels)
+
+        # Clean up batch data to free memory
+        del batch_audio, batch_features
+        gc.collect()
+
+        logger.info(f"Completed batch {batch_num}/{total_batches}")
+
+    # Combine all batch features
+    features = np.vstack(all_features)
+    labels = np.array(all_labels)
 
     logger.info(f"Feature extraction complete. Shape: {features.shape}")
 
@@ -472,7 +486,8 @@ def extract_features_from_dataset(dataset, config, save_path: Optional[str] = No
     if save_path:
         metadata = {
             'dataset_size': len(dataset),
-            'extraction_timestamp': str(np.datetime64('now'))
+            'extraction_timestamp': str(np.datetime64('now')),
+            'batch_size': batch_size
         }
         feature_extractor.save_features(features, labels, save_path, metadata)
 
