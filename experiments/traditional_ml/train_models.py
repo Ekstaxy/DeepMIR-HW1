@@ -31,8 +31,8 @@ def load_datasets(config):
     """Load training, validation, and test datasets."""
     logger.info("Loading datasets...")
 
-    train_dataset = Artist20Dataset(config.dataset.train_json, config)
-    val_dataset = Artist20Dataset(config.dataset.val_json, config)
+    train_dataset = Artist20Dataset(config.dataset.train_json, root_dir=config.dataset.root_path, sample_rate=config.dataset.sample_rate)
+    val_dataset = Artist20Dataset(config.dataset.val_json, root_dir=config.dataset.root_path, sample_rate=config.dataset.sample_rate)
     test_files = list(Path(config.dataset.test_dir).glob("*.mp3"))
 
     logger.info(f"Loaded {len(train_dataset)} training samples")
@@ -155,10 +155,13 @@ def generate_test_predictions_for_best_model(models, test_data, config):
 
     return predictions_path
 
-@hydra.main(version_base=None, config_path="../../configs/traditional_ml", config_name="baseline_config")
-def main(config: DictConfig):
+@hydra.main(version_base=None, config_path="../../configs", config_name="traditional_ml/baseline_config")
+def main(cfg: DictConfig):
     """Main training function."""
-
+    if 'traditional_ml' in cfg:
+        config = cfg.traditional_ml
+    else:
+        config = cfg
     # Setup logging and tracking
     experiment_name = f"traditional_ml_{config.experiment.name}"
     main_logger, metrics_logger = create_experiment_loggers(config, experiment_name)
@@ -246,4 +249,5 @@ def main(config: DictConfig):
         tracker.finish()
 
 if __name__ == "__main__":
+    print("cry")
     main()
