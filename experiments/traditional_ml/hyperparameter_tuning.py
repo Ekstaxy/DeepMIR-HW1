@@ -19,7 +19,7 @@ from models.traditional.ml_models import HyperparameterTuner
 from models.traditional.feature_extractors import AudioFeatureExtractor, extract_features_from_dataset
 from data.datasets import Artist20Dataset
 from experiments.tracking import ExperimentTracker
-from experiments.logger_utils import setup_logging
+from experiments.logger_utils import create_experiment_loggers
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +27,9 @@ logger = logging.getLogger(__name__)
 def main(config: DictConfig):
     """Run hyperparameter tuning for all ML models."""
 
-    setup_logging(config)
-    logger.info("Starting hyperparameter tuning...")
+    experiment_name = f"hyperparameter_tuning_{config.experiment.name}"
+    main_logger, metrics_logger = create_experiment_loggers(config, experiment_name)
+    main_logger.info("Starting hyperparameter tuning...")
 
     # Initialize experiment tracker
     tracker = ExperimentTracker(

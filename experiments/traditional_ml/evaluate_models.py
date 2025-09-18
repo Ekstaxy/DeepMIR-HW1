@@ -23,7 +23,7 @@ from models.traditional.ml_models import create_model, ModelEvaluator
 from models.traditional.feature_extractors import AudioFeatureExtractor, extract_features_from_dataset
 from data.datasets import Artist20Dataset
 from experiments.tracking import ExperimentTracker
-from experiments.logger_utils import setup_logging
+from experiments.logger_utils import create_experiment_loggers
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +49,9 @@ def plot_confusion_matrix(y_true, y_pred, labels, model_type, save_path):
 def main(config: DictConfig):
     """Evaluate all trained ML models."""
 
-    setup_logging(config)
-    logger.info("Starting model evaluation...")
+    experiment_name = f"model_evaluation_{config.experiment.name}"
+    main_logger, metrics_logger = create_experiment_loggers(config, experiment_name)
+    main_logger.info("Starting model evaluation...")
 
     # Initialize experiment tracker
     tracker = ExperimentTracker(
