@@ -22,6 +22,7 @@ from models.traditional.ml_models import (
 )
 from models.traditional.feature_extractors import AudioFeatureExtractor, extract_features_from_dataset
 from data.datasets import Artist20Dataset
+from data.utils import load_audio_file
 from experiments.tracking import ExperimentTracker
 from experiments.logger_utils import create_experiment_loggers
 
@@ -72,9 +73,15 @@ def extract_features(datasets, config):
 
     for test_file in sorted(test_files):
         logger.info(f"Processing test file: {test_file.name}")
-        features = feature_extractor.extract_features(str(test_file))
-        X_test.append(features)
-        test_filenames.append(test_file.stem)  # Get filename without extension
+        # Load audio file first, then extract features
+        try:
+            audio, sr = load_audio_file(str(test_file), sample_rate=config.audio.sample_rate)
+            features = feature_extractor.extract_features(audio)
+            X_test.append(features)
+            test_filenames.append(test_file.stem)  # Get filename without extension
+        except Exception as e:
+            logger.error(f"Failed to process test file {test_file.name}: {e}")
+            continue
 
     X_test = np.array(X_test)
 
