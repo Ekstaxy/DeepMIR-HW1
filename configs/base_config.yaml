@@ -11,10 +11,10 @@ project:
 # Dataset configuration
 dataset:
   name: "artist20"
-  root_path: "/data/processed"
-  train_json: "/data/processed/train.json"
-  val_json: "/data/processed/val.json"
-  test_dir: "/data/processed/test"
+  root_path: "data/processed"
+  train_json: "data/processed/train.json"
+  val_json: "data/processed/val.json"
+  test_dir: "data/processed/test"
   num_classes: 20
   sample_rate: 16000
   channels: 1  # mono
@@ -56,7 +56,7 @@ evaluation:
 logging:
   level: "INFO"
   save_logs: true
-  log_dir: "../../results/logs"
+  log_dir: "results/logs"
   experiment_name: null  # will be set automatically
 
 # WandB settings
@@ -77,11 +77,11 @@ device:
 
 # Output paths
 paths:
-  checkpoints: "../../results/checkpoints"
-  predictions: "../../results/predictions"
-  visualizations: "../../results/visualizations"
-  processed_data: "../../data/processed"
-  features: "../../data/processed/features"
+  checkpoints: "results/checkpoints"
+  predictions: "results/predictions"
+  visualizations: "results/visualizations"
+  processed_data: "data/processed"
+  features: "data/processed/features"
 
 # Reproducibility
 reproducibility:
