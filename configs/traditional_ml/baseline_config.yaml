@@ -117,8 +117,3 @@ training:
   num_epochs: null  # not applicable for traditional ML
   learning_rate: null  # not applicable for traditional ML
 
-# Feature caching
-caching:
-  cache_features: true
-  cache_dir: "data/processed/feature_cache"
-  force_recompute: false

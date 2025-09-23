@@ -302,8 +302,8 @@ def get_test_files(test_dir: Union[str, Path]) -> List[str]:
     test_dir = Path(test_dir)
     test_files = []
 
-    for i in range(1, 234):  # 001.mp3 to 233.mp3
-        file_path = test_dir / f"{i:03d}.mp3"
+    for i in range(1, 234):  # 001_vocals.mp3 to 233_vocals.mp3
+        file_path = test_dir / f"{i:03d}_vocals.mp3"
         if file_path.exists():
             test_files.append(str(file_path))
         else:

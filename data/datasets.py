@@ -34,7 +34,6 @@ class Artist20Dataset(Dataset):
         transform: Optional[Callable] = None,
         sample_rate: int = 16000,
         max_duration: Optional[float] = None,
-        cache_audio: bool = False,
         validate_files: bool = True
     ):
         """
@@ -47,7 +46,6 @@ class Artist20Dataset(Dataset):
             transform: Optional transform to apply to audio
             sample_rate: Sample rate for audio loading
             max_duration: Maximum duration in seconds
-            cache_audio: Cache loaded audio in memory
             validate_files: Validate audio files during initialization
         """
         self.json_file_path = Path(json_file_path)
@@ -55,21 +53,28 @@ class Artist20Dataset(Dataset):
         self.transform = transform
         self.sample_rate = sample_rate
         self.max_duration = max_duration
-        self.cache_audio = cache_audio
-        self.audio_cache = {} if cache_audio else None
 
         # Load file paths from JSON
         with open(self.json_file_path, 'r') as f:
             self.file_paths = json.load(f)
 
-        # Convert relative paths to absolute
+        # Convert relative paths to absolute and handle vocals suffix
         self.absolute_paths = []
         for file_path in self.file_paths:
             if file_path.startswith('./'):
                 abs_path = self.root_dir / file_path[2:]  # Remove './'
             else:
                 abs_path = self.root_dir / file_path
-            self.absolute_paths.append(str(abs_path))
+
+            # Convert to Path object for easier manipulation
+            abs_path = Path(abs_path)
+
+            # Add _vocals suffix before the file extension
+            # e.g., "song.mp3" becomes "song_vocals.mp3"
+            vocals_filename = abs_path.stem + "_vocals" + abs_path.suffix
+            vocals_path = abs_path.parent / vocals_filename
+
+            self.absolute_paths.append(str(vocals_path))
 
         # Create or use provided artist mapping
         if artist_to_id is None:
@@ -164,23 +169,18 @@ class Artist20Dataset(Dataset):
         file_path = self.absolute_paths[file_idx]
         label = self.labels[idx]
 
-        # Load audio (with caching if enabled)
-        if self.cache_audio and file_path in self.audio_cache:
-            audio = self.audio_cache[file_path]
-        else:
-            try:
-                audio, sr = load_audio_file(
-                    file_path,
-                    sample_rate=self.sample_rate,
-                    duration=self.max_duration
-                )
-                if self.cache_audio:
-                    self.audio_cache[file_path] = audio
-            except Exception as e:
-                logger.error(f"Failed to load audio {file_path}: {e}")
-                # Return zeros as fallback
-                target_length = int(self.sample_rate * (self.max_duration or 30.0))
-                audio = np.zeros(target_length, dtype=np.float32)
+        # Load audio
+        try:
+            audio, sr = load_audio_file(
+                file_path,
+                sample_rate=self.sample_rate,
+                duration=self.max_duration
+            )
+        except Exception as e:
+            logger.error(f"Failed to load audio {file_path}: {e}")
+            # Return zeros as fallback
+            target_length = int(self.sample_rate * (self.max_duration or 30.0))
+            audio = np.zeros(target_length, dtype=np.float32)
 
         # Apply transforms
         if self.transform:
@@ -231,8 +231,7 @@ class Artist20TestDataset(Dataset):
         test_dir: Union[str, Path],
         transform: Optional[Callable] = None,
         sample_rate: int = 16000,
-        max_duration: Optional[float] = None,
-        cache_audio: bool = False
+        max_duration: Optional[float] = None
     ):
         """
         Initialize Artist20TestDataset.
@@ -242,14 +241,11 @@ class Artist20TestDataset(Dataset):
             transform: Optional transform to apply to audio
             sample_rate: Sample rate for audio loading
             max_duration: Maximum duration in seconds
-            cache_audio: Cache loaded audio in memory
         """
         self.test_dir = Path(test_dir)
         self.transform = transform
         self.sample_rate = sample_rate
         self.max_duration = max_duration
-        self.cache_audio = cache_audio
-        self.audio_cache = {} if cache_audio else None
 
         # Get test files in order (001.mp3 to 233.mp3)
         self.file_paths = get_test_files(test_dir)
@@ -257,8 +253,10 @@ class Artist20TestDataset(Dataset):
         # Extract test IDs from filenames
         self.test_ids = []
         for file_path in self.file_paths:
-            filename = Path(file_path).stem  # e.g., "001" from "001.mp3"
-            self.test_ids.append(filename)
+            filename = Path(file_path).stem  # e.g., "001_vocals" from "001_vocals.mp3"
+            # Remove "_vocals" suffix to get the original test ID
+            test_id = filename.replace("_vocals", "")  # e.g., "001" from "001_vocals"
+            self.test_ids.append(test_id)
 
         logger.info(f"Loaded {len(self.file_paths)} test samples from {test_dir}")
 
@@ -282,23 +280,18 @@ class Artist20TestDataset(Dataset):
         file_path = self.file_paths[idx]
         test_id = self.test_ids[idx]
 
-        # Load audio (with caching if enabled)
-        if self.cache_audio and file_path in self.audio_cache:
-            audio = self.audio_cache[file_path]
-        else:
-            try:
-                audio, sr = load_audio_file(
-                    file_path,
-                    sample_rate=self.sample_rate,
-                    duration=self.max_duration
-                )
-                if self.cache_audio:
-                    self.audio_cache[file_path] = audio
-            except Exception as e:
-                logger.error(f"Failed to load test audio {file_path}: {e}")
-                # Return zeros as fallback
-                target_length = int(self.sample_rate * (self.max_duration or 30.0))
-                audio = np.zeros(target_length, dtype=np.float32)
+        # Load audio
+        try:
+            audio, sr = load_audio_file(
+                file_path,
+                sample_rate=self.sample_rate,
+                duration=self.max_duration
+            )
+        except Exception as e:
+            logger.error(f"Failed to load test audio {file_path}: {e}")
+            # Return zeros as fallback
+            target_length = int(self.sample_rate * (self.max_duration or 30.0))
+            audio = np.zeros(target_length, dtype=np.float32)
 
         # Apply transforms
         if self.transform:
@@ -321,81 +314,3 @@ class Artist20TestDataset(Dataset):
             'test_id': self.test_ids[idx]
         }
 
-class CachedDataset(Dataset):
-    """Dataset wrapper that caches preprocessed features."""
-
-    def __init__(
-        self,
-        base_dataset: Dataset,
-        cache_dir: Union[str, Path],
-        cache_name: str,
-        force_recompute: bool = False
-    ):
-        """
-        Initialize cached dataset.
-
-        Args:
-            base_dataset: Base dataset to wrap
-            cache_dir: Directory to store cache files
-            cache_name: Name for cache file
-            force_recompute: Force recomputation of cache
-        """
-        self.base_dataset = base_dataset
-        self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-
-        self.cache_file = self.cache_dir / f"{cache_name}.npz"
-        self.force_recompute = force_recompute
-
-        # Load or create cache
-        self._load_or_create_cache()
-
-    def _load_or_create_cache(self):
-        """Load existing cache or create new one."""
-        if self.cache_file.exists() and not self.force_recompute:
-            logger.info(f"Loading cached features from {self.cache_file}")
-            data = np.load(self.cache_file)
-            self.cached_features = data['features']
-            self.cached_labels = data['labels']
-        else:
-            logger.info(f"Creating cache at {self.cache_file}")
-            self._create_cache()
-
-    def _create_cache(self):
-        """Create cache by processing all samples."""
-        features = []
-        labels = []
-
-        for i in range(len(self.base_dataset)):
-            if i % 100 == 0:
-                logger.info(f"Caching sample {i}/{len(self.base_dataset)}")
-
-            sample, label = self.base_dataset[i]
-
-            # Convert tensor to numpy for storage
-            if isinstance(sample, torch.Tensor):
-                sample = sample.numpy()
-
-            features.append(sample)
-            labels.append(label)
-
-        self.cached_features = np.array(features)
-        self.cached_labels = np.array(labels)
-
-        # Save to disk
-        np.savez_compressed(
-            self.cache_file,
-            features=self.cached_features,
-            labels=self.cached_labels
-        )
-        logger.info(f"Cached {len(features)} samples to {self.cache_file}")
-
-    def __len__(self) -> int:
-        """Return dataset length."""
-        return len(self.cached_labels)
-
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
-        """Get cached sample."""
-        feature = torch.from_numpy(self.cached_features[idx]).float()
-        label = int(self.cached_labels[idx])
-        return feature, label

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, Tuple, Optional, Union
 import logging
 
-from .datasets import Artist20Dataset, Artist20TestDataset, CachedDataset
+from .datasets import Artist20Dataset, Artist20TestDataset
 from .transforms import create_traditional_ml_transforms, create_deep_learning_transforms
 from .utils import get_artist_mapping
 
@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 def create_dataloaders(
     config,
     experiment_type: str = "deep_learning",
-    use_weighted_sampling: bool = True,
-    cache_features: bool = False,
-    cache_dir: Optional[str] = None
+    use_weighted_sampling: bool = True
 ) -> Tuple[DataLoader, DataLoader, Dict[str, int]]:
     """
     Create train and validation data loaders.
@@ -29,8 +27,6 @@ def create_dataloaders(
         config: Configuration object with dataset and training parameters
         experiment_type: Type of experiment ('traditional_ml' or 'deep_learning')
         use_weighted_sampling: Use weighted sampling for imbalanced classes
-        cache_features: Cache preprocessed features to disk
-        cache_dir: Directory for caching (uses config if None)
 
     Returns:
         Tuple of (train_loader, val_loader, artist_to_id)
@@ -81,7 +77,6 @@ def create_dataloaders(
         transform=train_transform,
         sample_rate=config.audio.sample_rate,
         max_duration=config.audio.max_duration,
-        cache_audio=False,  # Don't cache raw audio in memory
         validate_files=True
     )
 
@@ -92,25 +87,9 @@ def create_dataloaders(
         transform=val_transform,
         sample_rate=config.audio.sample_rate,
         max_duration=config.audio.max_duration,
-        cache_audio=False,
         validate_files=True
     )
 
-    # Optionally wrap with caching
-    if cache_features:
-        cache_dir = cache_dir or config.paths.features
-        train_dataset = CachedDataset(
-            train_dataset,
-            cache_dir=cache_dir,
-            cache_name=f"train_{experiment_type}",
-            force_recompute=False
-        )
-        val_dataset = CachedDataset(
-            val_dataset,
-            cache_dir=cache_dir,
-            cache_name=f"val_{experiment_type}",
-            force_recompute=False
-        )
 
     # Create samplers
     train_sampler = None
@@ -118,15 +97,7 @@ def create_dataloaders(
         class_weights = train_dataset.get_class_weights()
 
         # Create sample weights
-        if hasattr(train_dataset, 'labels'):
-            sample_weights = class_weights[train_dataset.labels]
-        else:
-            # For cached dataset, need to extract labels differently
-            sample_weights = []
-            for i in range(len(train_dataset)):
-                _, label = train_dataset[i]
-                sample_weights.append(class_weights[label])
-            sample_weights = torch.tensor(sample_weights)
+        sample_weights = class_weights[train_dataset.labels]
 
         train_sampler = WeightedRandomSampler(
             weights=sample_weights,
@@ -202,8 +173,7 @@ def create_test_dataloader(
         test_dir=config.dataset.test_dir,
         transform=transform,
         sample_rate=config.audio.sample_rate,
-        max_duration=config.audio.max_duration,
-        cache_audio=False
+        max_duration=config.audio.max_duration
     )
 
     # Create test data loader

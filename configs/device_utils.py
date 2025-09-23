@@ -238,7 +238,6 @@ The project automatically detects Colab environment and adjusts:
 ## Memory Management
 
 For large datasets in Colab:
-- Use `cache_features=False` to avoid memory issues
 - Consider using smaller `max_duration` for audio (e.g., 20 seconds)
 - Monitor GPU memory with `torch.cuda.memory_summary()`
 

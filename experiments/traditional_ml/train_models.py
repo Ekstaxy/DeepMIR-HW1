@@ -24,7 +24,6 @@ from models.traditional.feature_extractors import AudioFeatureExtractor, extract
 from data.datasets import Artist20Dataset
 from data.utils import load_audio_file
 from experiments.tracking import ExperimentTracker
-from experiments.logger_utils import create_experiment_loggers
 
 logger = logging.getLogger(__name__)
 
@@ -37,14 +36,12 @@ def load_datasets(config):
         config.dataset.train_json,
         root_dir=config.dataset.root_path,
         sample_rate=config.dataset.sample_rate,
-        cache_audio=False,  # Don't cache audio in memory
         validate_files=False  # Skip validation to avoid loading all files
     )
     val_dataset = Artist20Dataset(
         config.dataset.val_json,
         root_dir=config.dataset.root_path,
         sample_rate=config.dataset.sample_rate,
-        cache_audio=False,  # Don't cache audio in memory
         validate_files=False  # Skip validation to avoid loading all files
     )
     test_files = list(Path(config.dataset.test_dir).glob("*.mp3"))
@@ -184,8 +181,7 @@ def main(cfg: DictConfig):
         config = cfg
     # Setup logging and tracking
     experiment_name = f"traditional_ml_{config.experiment.name}"
-    main_logger, metrics_logger = create_experiment_loggers(config, experiment_name)
-    main_logger.info("Starting traditional ML training...")
+    logger.info("Starting traditional ML training...")
 
     # Initialize experiment tracker
     tracker = ExperimentTracker(
@@ -269,5 +265,4 @@ def main(cfg: DictConfig):
         tracker.finish()
 
 if __name__ == "__main__":
-    print("cry")
     main()
