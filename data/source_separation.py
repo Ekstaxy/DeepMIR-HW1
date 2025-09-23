@@ -1,5 +1,6 @@
 # Import necessary libraries
 import os
+import glob
 import torch
 import torchaudio
 import matplotlib.pyplot as plt
@@ -123,13 +124,20 @@ def plot_waveform(waveform, sample_rate, title="Waveform", xlim=None, ylim=None)
     plt.grid()
     plt.show()
 
-def main(file_path, output_dir="processed"):
-    for files in os.listdir(file_path):
-        if files.endswith(".mp3") or files.endswith(".wav"):
-            print(f"Processing file: {files}")
-            full_path = os.path.join(file_path, files)
-            output_path, vocals, sr = separate_audio(full_path, output_dir=output_dir)
-
+def main(input_dir, output_dir):
+    for root, dirs, files in os.walk(input_dir):
+        for file in files:
+            if file.endswith(".mp3") or file.endswith(".wav"):
+                file_path = os.path.join(root, file)
+                # Compute relative path from input_dir
+                rel_path = os.path.relpath(root, input_dir)
+                # Create corresponding output subfolder
+                out_subdir = os.path.join(output_dir, rel_path)
+                os.makedirs(out_subdir, exist_ok=True)
+                separate_audio(file_path, output_dir=out_subdir)
 
 if __name__ == "__main__":
-    main(file_path="data/raw/artist20/test", output_dir="data/processed/test")
+    # For test set
+    # main('data/raw/artist20/test', output_dir='data/processed/test')
+    # For train_val set
+    main('data/raw/artist20/train_val', output_dir='data/processed/train_val')
