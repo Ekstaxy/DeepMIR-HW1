@@ -24,7 +24,9 @@ audio:
   sample_rate: 16000
   n_fft: 2048
   hop_length: 512
-  n_mels: 128
+  n_mels: 80
+  f_min: 80.0
+  f_max: 8000.0
   max_duration: 30.0  # seconds
   normalize: true
 

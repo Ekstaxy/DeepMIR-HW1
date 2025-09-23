@@ -3,78 +3,34 @@
 
 defaults:
   - /base_config
+  - _self_
 
 # Override base settings for deep learning
 experiment:
   type: "deep_learning"
-  name: "baseline_cnn"
-  description: "Baseline CNN for end-to-end audio classification"
+  name: "CNN"
+  description: "Various CNN structures for end-to-end audio classification"
 
 # Model architecture
 model:
-  name: "baseline_cnn"
+  name: "ShortChunkCNN"  # ShortChunkCNN or ShortChunkCNN_Res
+  n_channels: 128
+  n_fft: 2048
+  hop_length: 512
+  f_min: 80.0
+  f_max: 8000.0
+  n_mels: 80
+  n_class: 20
 
-  # Input settings
-  input:
-    type: "mel_spectrogram"  # raw_audio, mel_spectrogram, mfcc
-    n_mels: 128
-    n_fft: 2048
-    hop_length: 512
-    max_length: 1876  # ~30 seconds at 16kHz with hop_length=512
+  # name: "ShortChunkCNN_Res"
+  # n_channels: 128
+  # n_fft: 2048
+  # hop_length: 512
+  # f_min: 80.0
+  # f_max: 8000.0
+  # n_mels: 80
+  # n_class: 20
 
-  # CNN architecture
-  cnn:
-    # Convolutional layers
-    conv_layers:
-      - filters: 32
-        kernel_size: [3, 3]
-        stride: [1, 1]
-        padding: "same"
-        activation: "relu"
-        batch_norm: true
-        dropout: 0.1
-
-      - filters: 64
-        kernel_size: [3, 3]
-        stride: [2, 2]
-        padding: "same"
-        activation: "relu"
-        batch_norm: true
-        dropout: 0.1
-
-      - filters: 128
-        kernel_size: [3, 3]
-        stride: [2, 2]
-        padding: "same"
-        activation: "relu"
-        batch_norm: true
-        dropout: 0.2
-
-      - filters: 256
-        kernel_size: [3, 3]
-        stride: [2, 2]
-        padding: "same"
-        activation: "relu"
-        batch_norm: true
-        dropout: 0.2
-
-    # Global pooling
-    global_pooling: "avg"  # avg, max, both
-
-    # Fully connected layers
-    fc_layers:
-      - units: 512
-        activation: "relu"
-        dropout: 0.5
-        batch_norm: true
-
-      - units: 256
-        activation: "relu"
-        dropout: 0.3
-        batch_norm: true
-
-    # Output layer (will be set to num_classes automatically)
-    output_activation: null  # will use softmax for classification
 
 # Data augmentation
 data_augmentation:
@@ -157,12 +113,6 @@ lr_scheduler:
 loss:
   name: "cross_entropy"
   label_smoothing: 0.0
-
-  # Alternative losses
-  alternatives:
-    focal_loss:
-      alpha: 1.0
-      gamma: 2.0
 
 # Training settings (override base)
 training:
