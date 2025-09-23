@@ -11,10 +11,10 @@ project:
 # Dataset configuration
 dataset:
   name: "artist20"
-  root_path: "../../data/processed"
-  train_json: "../../data/processed/train.json"
-  val_json: "../../data/processed/val.json"
-  test_dir: "../../data/processed/test"
+  root_path: "/data/processed"
+  train_json: "/data/processed/train.json"
+  val_json: "/data/processed/val.json"
+  test_dir: "/data/processed/test"
   num_classes: 20
   sample_rate: 16000
   channels: 1  # mono
