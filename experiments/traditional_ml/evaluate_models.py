@@ -23,7 +23,6 @@ from models.traditional.ml_models import create_model, ModelEvaluator
 from models.traditional.feature_extractors import AudioFeatureExtractor, extract_features_from_dataset
 from data.datasets import Artist20Dataset
 from experiments.tracking import ExperimentTracker
-from experiments.logger_utils import create_experiment_loggers
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +49,7 @@ def main(config: DictConfig):
     """Evaluate all trained ML models."""
 
     experiment_name = f"model_evaluation_{config.experiment.name}"
-    main_logger, metrics_logger = create_experiment_loggers(config, experiment_name)
-    main_logger.info("Starting model evaluation...")
+    logger.info("Starting model evaluation...")
 
     # Initialize experiment tracker
     tracker = ExperimentTracker(

@@ -18,7 +18,6 @@ sys.path.append(str(project_root))
 
 from models.traditional.ml_models import create_model, generate_test_predictions
 from models.traditional.feature_extractors import AudioFeatureExtractor
-from experiments.logger_utils import setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,6 @@ logger = logging.getLogger(__name__)
 def main(config: DictConfig):
     """Generate test predictions from saved models."""
 
-    setup_logging(config)
     logger.info("Generating test predictions...")
 
     try:

@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python run_tests.py:*)"
+      "Bash(python run_tests.py:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(rm:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []
