@@ -169,7 +169,6 @@ def create_loss_function(config):
 
 
 def train_epoch(model, train_loader, criterion, optimizer, device, config):
-    """Train model for one epoch."""
     model.train()
     total_loss = 0.0
     correct = 0
@@ -177,6 +176,15 @@ def train_epoch(model, train_loader, criterion, optimizer, device, config):
 
     with tqdm(train_loader, desc="Training") as pbar:
         for batch_idx, (data, target) in enumerate(pbar):
+            # data shape: (batch_size, num_excerpts, audio_length)
+            # target shape: (batch_size,)
+            
+            batch_size, num_excerpts, audio_length = data.shape
+            
+            # Reshape to process all excerpts as separate samples
+            data = data.view(-1, audio_length)  # (batch_size * 5, audio_length)
+            target = target.repeat_interleave(num_excerpts)  # (batch_size * 5,)
+            
             data, target = data.to(device), target.to(device)
 
             optimizer.zero_grad()
@@ -254,6 +262,7 @@ def validate_epoch(model, val_loader, criterion, device):
     # Confusion matrix
     conf_matrix = confusion_matrix(all_true_labels, all_pred_labels)
 
+    
     return {
         'loss': avg_loss,
         'accuracy': top1_acc,
@@ -300,6 +309,10 @@ def train_model(model, train_loader, val_loader, config, device, tracker):
     best_val_acc = 0.0
     early_stopping_counter = 0
     best_metrics = {}
+    train_loss_history = []
+    train_acc_history = []
+    val_loss_history = []
+    val_acc_history = []
 
     for epoch in range(config.training.num_epochs):
         # Train
@@ -311,6 +324,12 @@ def train_model(model, train_loader, val_loader, config, device, tracker):
 
             # Log epoch summary
             logger.info(f"Epoch {epoch + 1:3d} | train_loss={train_metrics['loss']:.4f} | train_acc={train_metrics['accuracy']:.4f} | val_loss={val_metrics['loss']:.4f} | val_acc={val_metrics['accuracy']:.4f} | val_top3_acc={val_metrics['top3_accuracy']:.4f}")
+
+            # Save metrics for plotting
+            train_loss_history.append(train_metrics['loss'])
+            train_acc_history.append(train_metrics['accuracy'])
+            val_loss_history.append(val_metrics['loss'])
+            val_acc_history.append(val_metrics['accuracy'])
 
             # Log metrics to tracker
             tracker.log_metrics({
@@ -338,6 +357,9 @@ def train_model(model, train_loader, val_loader, config, device, tracker):
                 tracker.save_checkpoint(model, optimizer, epoch, val_metrics)
                 early_stopping_counter = 0
                 logger.info(f"New best model: {best_val_acc:.4f}% accuracy")
+                print(f"Top3 Accuracy: {val_metrics['top3_accuracy']:.4f}%")
+                print("\nConfusion Matrix:")
+                print(val_metrics['confusion_matrix'])
             else:
                 early_stopping_counter += 1
 
@@ -350,12 +372,22 @@ def train_model(model, train_loader, val_loader, config, device, tracker):
         else:
             logger.info(f"Epoch {epoch + 1:3d} | train_loss={train_metrics['loss']:.4f} | train_acc={train_metrics['accuracy']:.4f}")
 
+            train_loss_history.append(train_metrics['loss'])
+            train_acc_history.append(train_metrics['accuracy'])
+            # No validation metrics for this epoch
+
             tracker.log_metrics({
                 'epoch': epoch + 1,
                 'train_loss': train_metrics['loss'],
                 'train_acc': train_metrics['accuracy'],
                 'learning_rate': optimizer.param_groups[0]['lr']
             }, step=epoch)
+
+    # Print accuracy and loss vs epoch at the end
+    print("\nTrain Loss vs Epoch:", train_loss_history)
+    print("Train Accuracy vs Epoch:", train_acc_history)
+    print("Val Loss vs Epoch:", val_loss_history)
+    print("Val Accuracy vs Epoch:", val_acc_history)
 
     logger.info(f"Training completed. Best validation accuracy: {best_val_acc:.4f}%")
     return model, best_metrics
