@@ -18,6 +18,8 @@ from omegaconf import DictConfig
 
 from sklearn.metrics import confusion_matrix
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -34,6 +36,19 @@ from data.utils import get_artist_mapping
 from experiments.tracking import ExperimentTracker
 
 logger = logging.getLogger(__name__)
+
+
+def set_seed(seed: int):
+    """Set random seed for reproducibility."""
+    import random
+    import numpy as np
+    import torch
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 
 def create_model(config):
@@ -295,7 +310,7 @@ def calculate_top_k_accuracy(predictions, targets, k=3):
     return top1_accuracy, topk_accuracy
 
 
-def train_model(model, train_loader, val_loader, config, device, tracker):
+def train_model(model, train_loader, val_loader, config, device, tracker, artist_to_id):
     """Main training loop."""
     logger.info("Starting training...")
 
@@ -346,7 +361,7 @@ def train_model(model, train_loader, val_loader, config, device, tracker):
             # Update scheduler
             if scheduler is not None:
                 if config.lr_scheduler.name == "reduce_on_plateau":
-                    scheduler.step(val_metrics['accuracy'])
+                    scheduler.step(val_metrics['loss'])
                 else:
                     scheduler.step()
 
@@ -360,7 +375,7 @@ def train_model(model, train_loader, val_loader, config, device, tracker):
                 logger.info(f"New best model: {best_val_acc:.4f}% accuracy")
                 print(f"Top3 Accuracy: {val_metrics['top3_accuracy']:.4f}%")
                 print("\nConfusion Matrix:")
-                print(val_metrics['confusion_matrix'])
+                plot_confusion_matrix(val_metrics['confusion_matrix'], class_names=list(artist_to_id.keys()))
             else:
                 early_stopping_counter += 1
 
@@ -461,6 +476,16 @@ def generate_test_predictions(model, test_loader, artist_to_id, config, device):
     return predictions_path
 
 
+def plot_confusion_matrix(conf_matrix, class_names):
+    """Visualize confusion matrix using matplotlib and seaborn."""
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", xticklabels=class_names, yticklabels=class_names)
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.title("Confusion Matrix")
+    plt.show()
+
+
 @hydra.main(version_base=None, config_path="../../configs", config_name="deep_learning/baseline_config")
 def main(cfg: DictConfig):
     """Main training function."""
@@ -522,7 +547,7 @@ def main(cfg: DictConfig):
         # Step 4: Train
         logger.info("Starting training...")
         trained_model, best_metrics = train_model(
-            model, train_loader, val_loader, config, device, tracker
+            model, train_loader, val_loader, config, device, tracker, artist_to_id
         )
 
         # Step 5: Generate predictions
@@ -562,4 +587,7 @@ def main(cfg: DictConfig):
 
 
 if __name__ == "__main__":
+    # Set seed for reproducibility
+    set_seed(42)  # Replace 42 with your desired seed value
+
     main()
