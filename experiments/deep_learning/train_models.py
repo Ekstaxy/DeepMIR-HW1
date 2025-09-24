@@ -15,6 +15,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import hydra
 from omegaconf import DictConfig
+
+from sklearn.metrics import confusion_matrix
 from tqdm import tqdm
 
 # Add project root to path
@@ -218,6 +220,8 @@ def validate_epoch(model, val_loader, criterion, device):
     total = 0
     all_predictions = []
     all_targets = []
+    all_pred_labels = []
+    all_true_labels = []
 
     with torch.no_grad():
         with tqdm(val_loader, desc="Validation") as pbar:
@@ -234,6 +238,8 @@ def validate_epoch(model, val_loader, criterion, device):
                 # Store for top-k metrics
                 all_predictions.append(output.cpu())
                 all_targets.append(target.cpu())
+                all_pred_labels.extend(predicted.cpu().numpy().tolist())
+                all_true_labels.extend(target.cpu().numpy().tolist())
 
                 # Update progress bar
                 pbar.set_postfix({
@@ -243,13 +249,16 @@ def validate_epoch(model, val_loader, criterion, device):
 
     # Calculate top-1 and top-3 accuracy
     top1_acc, top3_acc = calculate_top_k_accuracy(all_predictions, all_targets, k=3)
-
     avg_loss = total_loss / len(val_loader)
+
+    # Confusion matrix
+    conf_matrix = confusion_matrix(all_true_labels, all_pred_labels)
 
     return {
         'loss': avg_loss,
         'accuracy': top1_acc,
-        'top3_accuracy': top3_acc
+        'top3_accuracy': top3_acc,
+        'confusion_matrix': conf_matrix
     }
 
 
@@ -370,11 +379,26 @@ def generate_test_predictions(model, test_loader, artist_to_id, config, device):
             for batch_data, test_ids in pbar:
                 batch_data = batch_data.to(device)
 
-                # Get model predictions
-                outputs = model(batch_data)
+                # For each sample in batch, run inference 3 times and average outputs
+                batch_size = batch_data.size(0)
+                all_outputs = []
+                for repeat in range(3):
+                    # Re-sample the batch by reloading from the dataset (test dataset __getitem__ is random)
+                    reloaded_batch = []
+                    for i, test_id in enumerate(test_ids):
+                        # Find index in dataset
+                        # Assumes test_ids are in order and match dataset order
+                        idx = i + pbar.n
+                        audio, _ = test_loader.dataset[idx]
+                        reloaded_batch.append(audio)
+                    reloaded_batch = torch.stack(reloaded_batch).to(device)
+                    outputs = model(reloaded_batch)
+                    all_outputs.append(outputs)
+                # Average outputs
+                avg_outputs = torch.stack(all_outputs).mean(dim=0)
 
                 # Get top-3 predictions for each sample in batch
-                _, top3_indices = outputs.topk(3, dim=1, largest=True, sorted=True)
+                _, top3_indices = avg_outputs.topk(3, dim=1, largest=True, sorted=True)
 
                 # Process each sample in the batch
                 for i, test_id in enumerate(test_ids):

@@ -107,6 +107,10 @@ def train_model(model_type, config, train_data, val_data):
     evaluator = ModelEvaluator(config)
     metrics = evaluator.evaluate_model(model, X_val, y_val)
 
+    # Print confusion matrix to console
+    print("\nConfusion Matrix:")
+    print(metrics['confusion_matrix'])
+
     return model, metrics
 
 def hyperparameter_tuning(model_type, config, train_data):
