@@ -433,7 +433,7 @@ def generate_test_predictions(model, test_loader, artist_to_id, config, device):
                 # For each sample in batch, run inference 3 times and average outputs
                 batch_size = batch_data.size(0)
                 all_outputs = []
-                for repeat in range(3):
+                for repeat in range(5):
                     # Re-sample the batch by reloading from the dataset (test dataset __getitem__ is random)
                     reloaded_batch = []
                     for i, test_id in enumerate(test_ids):
