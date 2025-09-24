@@ -328,13 +328,13 @@ def train_model(model, train_loader, val_loader, config, device, tracker):
                 best_metrics['epoch'] = epoch + 1
                 tracker.save_checkpoint(model, optimizer, epoch, val_metrics)
                 early_stopping_counter = 0
-                logger.info(f"🎯 New best model: {best_val_acc:.4f}% accuracy")
+                logger.info(f"New best model: {best_val_acc:.4f}% accuracy")
             else:
                 early_stopping_counter += 1
 
             # Early stopping
             if early_stopping_counter >= config.training.early_stopping_patience:
-                logger.info("🛑 Early stopping triggered")
+                logger.info("Early stopping triggered")
                 break
 
         # Log training metrics only (no validation)
@@ -348,7 +348,7 @@ def train_model(model, train_loader, val_loader, config, device, tracker):
                 'learning_rate': optimizer.param_groups[0]['lr']
             }, step=epoch)
 
-    logger.info(f"✅ Training completed. Best validation accuracy: {best_val_acc:.4f}%")
+    logger.info(f"Training completed. Best validation accuracy: {best_val_acc:.4f}%")
     return model, best_metrics
 
 

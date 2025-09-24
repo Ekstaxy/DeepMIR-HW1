@@ -15,8 +15,8 @@ experiment:
 model:
   name: "ShortChunkCNN"  # ShortChunkCNN or ShortChunkCNN_Res
   n_channels: 128
-  n_fft: 2048
-  hop_length: 512
+  n_fft: 1024  # Reduced from 2048 to handle shorter audio chunks
+  hop_length: 256  # Reduced proportionally
   f_min: 80.0
   f_max: 8000.0
   n_mels: 80
@@ -24,8 +24,8 @@ model:
 
   # name: "ShortChunkCNN_Res"
   # n_channels: 128
-  # n_fft: 2048
-  # hop_length: 512
+  # n_fft: 1024
+  # hop_length: 256
   # f_min: 80.0
   # f_max: 8000.0
   # n_mels: 80
@@ -97,7 +97,6 @@ lr_scheduler:
     factor: 0.5
     patience: 5
     min_lr: 1e-6
-    verbose: true
 
   # Alternative schedulers
   alternatives:

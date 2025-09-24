@@ -74,7 +74,7 @@ def create_dataloaders(
         json_file_path=train_json,
         root_dir=root_dir,
         artist_to_id=artist_to_id,
-        transform=train_transform,
+        transform=None,
         sample_rate=config.audio.sample_rate,
         max_duration=config.audio.max_duration,
         validate_files=True
@@ -84,7 +84,7 @@ def create_dataloaders(
         json_file_path=val_json,
         root_dir=root_dir,
         artist_to_id=artist_to_id,
-        transform=val_transform,
+        transform=None,
         sample_rate=config.audio.sample_rate,
         max_duration=config.audio.max_duration,
         validate_files=True
@@ -171,7 +171,7 @@ def create_test_dataloader(
     # Create test dataset
     test_dataset = Artist20TestDataset(
         test_dir=config.dataset.test_dir,
-        transform=transform,
+        transform=None,
         sample_rate=config.audio.sample_rate,
         max_duration=config.audio.max_duration
     )
