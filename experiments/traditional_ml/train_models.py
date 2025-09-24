@@ -27,6 +27,17 @@ from experiments.tracking import ExperimentTracker
 
 logger = logging.getLogger(__name__)
 
+def set_seed(seed: int):
+    """Set random seed for reproducibility."""
+    import random
+    import numpy as np
+
+    random.seed(seed)
+    np.random.seed(seed)
+
+# Set seed at the start of the script
+set_seed(42)  # Replace 42 with your desired seed value
+
 def load_datasets(config):
     """Load training, validation, and test datasets."""
     logger.info("Loading datasets...")
