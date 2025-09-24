@@ -405,6 +405,9 @@ def train_model(model, train_loader, val_loader, config, device, tracker, artist
     print("Val Loss vs Epoch:", val_loss_history)
     print("Val Accuracy vs Epoch:", val_acc_history)
 
+    # Plot training curves
+    plot_training_curves(train_loss_history, train_acc_history, val_loss_history, val_acc_history)
+
     logger.info(f"Training completed. Best validation accuracy: {best_val_acc:.4f}%")
     return model, best_metrics
 
@@ -484,6 +487,35 @@ def plot_confusion_matrix(conf_matrix, class_names):
     plt.ylabel("Actual")
     plt.title("Confusion Matrix")
     plt.show()
+
+
+def plot_training_curves(train_loss, train_acc, val_loss, val_acc):
+    """Plot training and validation loss/accuracy curves."""
+    epochs = range(1, len(train_loss) + 1)
+
+    plt.figure(figsize=(12, 5))
+
+    # Plot Loss
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, train_loss, label='Train Loss')
+    plt.plot(epochs, val_loss, label='Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Loss vs Epochs')
+    plt.legend()
+
+    # Plot Accuracy
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, train_acc, label='Train Accuracy')
+    plt.plot(epochs, val_acc, label='Validation Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.title('Accuracy vs Epochs')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig('training_curves.png')
+    plt.close()
 
 
 @hydra.main(version_base=None, config_path="../../configs", config_name="deep_learning/baseline_config")

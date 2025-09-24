@@ -11,6 +11,9 @@ from pathlib import Path
 import numpy as np
 import hydra
 from omegaconf import DictConfig
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import ConfusionMatrixDisplay
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -100,6 +103,17 @@ def extract_features(datasets, config):
 
     return (X_train, y_train), (X_val, y_val), (X_test, test_filenames)
 
+def plot_confusion_matrix(confusion_matrix, class_names, model_type):
+    """Plot and save confusion matrix using matplotlib and seaborn."""
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(confusion_matrix, annot=True, fmt="d", cmap="Blues", xticklabels=class_names, yticklabels=class_names)
+    plt.title(f"Confusion Matrix for {model_type}")
+    plt.xlabel("Predicted Labels")
+    plt.ylabel("True Labels")
+    plt.tight_layout()
+    plt.savefig(f"confusion_matrix_{model_type}.png")
+    plt.close()
+
 def train_model(model_type, config, train_data, val_data):
     """Train a single ML model."""
     logger.info(f"Training {model_type} model...")
@@ -118,9 +132,9 @@ def train_model(model_type, config, train_data, val_data):
     evaluator = ModelEvaluator(config)
     metrics = evaluator.evaluate_model(model, X_val, y_val)
 
-    # Print confusion matrix to console
-    print("\nConfusion Matrix:")
-    print(metrics['confusion_matrix'])
+    # Plot confusion matrix
+    class_names = config.dataset.class_names
+    plot_confusion_matrix(metrics['confusion_matrix'], class_names, model_type)
 
     return model, metrics
 
