@@ -182,10 +182,8 @@ def train_epoch(model, train_loader, criterion, optimizer, device, config):
             batch_size, num_excerpts, audio_length = data.shape
             
             # Reshape to process all excerpts as separate samples
-            data = data.view(-1, audio_length)  # (batch_size * 5, audio_length)
-            target = target.repeat_interleave(num_excerpts)  # (batch_size * 5,)
-            
-            data, target = data.to(device), target.to(device)
+            data = data.view(-1, audio_length).to(device)  # (batch_size * 5, audio_length)
+            target = target.repeat_interleave(num_excerpts).to(device)  # (batch_size * 5,)
 
             optimizer.zero_grad()
             output = model(data)
@@ -234,7 +232,11 @@ def validate_epoch(model, val_loader, criterion, device):
     with torch.no_grad():
         with tqdm(val_loader, desc="Validation") as pbar:
             for data, target in pbar:
-                data, target = data.to(device), target.to(device)
+                # Handle multiple excerpts per sample
+                batch_size, num_excerpts, audio_length = data.size()
+                data = data.view(batch_size * num_excerpts, audio_length).to(device)
+                target = target.repeat_interleave(num_excerpts).to(device)
+
                 output = model(data)
                 loss = criterion(output, target)
 
@@ -262,7 +264,6 @@ def validate_epoch(model, val_loader, criterion, device):
     # Confusion matrix
     conf_matrix = confusion_matrix(all_true_labels, all_pred_labels)
 
-    
     return {
         'loss': avg_loss,
         'accuracy': top1_acc,
