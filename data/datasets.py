@@ -154,7 +154,8 @@ class Artist20Dataset(Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
         """
-        Randomly pick a start point in the audio sample, check if the chunk is silent, and repeat until a non-silent chunk is found.
+        Return 5 random non-silent excerpts (10 sec each) from the audio sample.
+        Returns shape: (num_excerpts, audio_length)
         """
         if idx >= len(self.valid_indices):
             raise IndexError(f"Index {idx} out of range for dataset of size {len(self)}")
@@ -168,41 +169,45 @@ class Artist20Dataset(Dataset):
             audio, sr = load_audio_file(
                 file_path,
                 sample_rate=self.sample_rate,
-                duration=None  # load full audio
+                duration=None
             )
         except Exception as e:
             logger.error(f"Failed to load audio {file_path}: {e}")
-            target_length = int(self.sample_rate * (self.max_duration or 30.0))
+            target_length = int(self.sample_rate * (self.max_duration or 10.0))
             audio = np.zeros(target_length, dtype=np.float32)
 
         chunk_size = int(self.sample_rate * (self.max_duration or 10.0))
+        num_excerpts = 5
         max_attempts = 20
-        found = False
-        chosen_chunk = None
-        for _ in range(max_attempts):
-            if len(audio) <= chunk_size:
-                start = 0
-            else:
-                start = np.random.randint(0, len(audio) - chunk_size + 1)
-            chunk = audio[start:start+chunk_size]
-            # Energy threshold for silence
-            if np.mean(np.abs(chunk)) > 1e-4:
-                chosen_chunk = chunk
-                found = True
-                break
-        if not found:
-            # fallback: use first chunk
-            chosen_chunk = audio[:chunk_size]
+        excerpts = []
+        used_starts = set()
+        
+        for _ in range(num_excerpts):
+            found = False
+            for _ in range(max_attempts):
+                if len(audio) <= chunk_size:
+                    start = 0
+                else:
+                    start = np.random.randint(0, len(audio) - chunk_size + 1)
+                if start in used_starts:
+                    continue
+                chunk = audio[start:start+chunk_size]
+                if np.mean(np.abs(chunk)) > 1e-3:
+                    used_starts.add(start)
+                    found = True
+                    break
+            if not found:
+                chunk = audio[:chunk_size]
+            
+            # Apply transforms
+            excerpt = self.transform(chunk) if self.transform else chunk
+            if not isinstance(excerpt, torch.Tensor):
+                excerpt = torch.from_numpy(excerpt).float()
+            excerpts.append(excerpt)
 
-        # Apply transforms
-        if self.transform:
-            chosen_chunk = self.transform(chosen_chunk)
-
-        # Convert to tensor if needed
-        if not isinstance(chosen_chunk, torch.Tensor):
-            chosen_chunk = torch.from_numpy(chosen_chunk).float()
-
-        return chosen_chunk, label
+        # Stack excerpts: shape (5, audio_length)
+        excerpts_tensor = torch.stack(excerpts)
+        return excerpts_tensor, label
 
     def get_artist_name(self, label: int) -> str:
         """Get artist name from label."""

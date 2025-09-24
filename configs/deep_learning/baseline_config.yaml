@@ -115,7 +115,7 @@ loss:
 
 # Training settings (override base)
 training:
-  batch_size: 32
+  batch_size: 16
   num_epochs: 100
   early_stopping_patience: 15
   gradient_clip_norm: 1.0
@@ -124,7 +124,7 @@ training:
   validate_every: 1  # epochs
 
   # Checkpoint saving
-  save_every: 10  # epochs
+  save_every: 15  # epochs
   save_best_only: true
 
 # Model compilation

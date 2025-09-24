@@ -110,7 +110,7 @@ def create_dataloaders(
     train_loader = DataLoader(
         train_dataset,
         batch_size=config.training.batch_size,
-        shuffle=(train_sampler is None),
+        shuffle=True,
         sampler=train_sampler,
         num_workers=config.device.num_workers,
         pin_memory=config.device.pin_memory,
