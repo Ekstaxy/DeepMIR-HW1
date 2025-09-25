@@ -28,7 +28,7 @@ class ExperimentTracker:
         experiment_name: Optional[str] = None,
         tags: Optional[List[str]] = None,
         notes: Optional[str] = None,
-        use_wandb: bool = True
+        use_wandb: bool = False
     ):
         """
         Initialize experiment tracker.
