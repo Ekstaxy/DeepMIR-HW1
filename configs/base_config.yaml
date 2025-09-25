@@ -22,7 +22,7 @@ dataset:
 # Audio preprocessing
 audio:
   sample_rate: 16000
-  n_fft: 1024  # Reduced from 2048 to handle shorter audio chunks
+  n_fft: 2048  # Reduced from 2048 to handle shorter audio chunks
   hop_length: 512  # Reduced proportionally
   n_mels: 128
   f_min: 80.0
@@ -40,8 +40,8 @@ data_split:
 # Training settings
 training:
   batch_size: 16
-  num_epochs: 80
-  learning_rate: 0.002
+  num_epochs: 60
+  learning_rate: 0.001
   weight_decay: 0.0001
   early_stopping_patience: 10
   save_best_only: true

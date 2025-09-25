@@ -89,20 +89,20 @@ optimizer:
 
 # Learning rate scheduler
 lr_scheduler:
-  name: "reduce_on_plateau"
+  name: "cosine_annealing"
 
   # ReduceLROnPlateau settings
   reduce_on_plateau:
     mode: "max"
     factor: 0.5
     patience: 5
-    min_lr: 1e-6
+    min_lr: 5e-6
 
   # Alternative schedulers
   alternatives:
     cosine_annealing:
       T_max: 50
-      eta_min: 1e-6
+      eta_min: 5e-6
 
     step_lr:
       step_size: 30
