@@ -42,7 +42,7 @@ def set_seed(seed: int):
 set_seed(42)  # Replace 42 with your desired seed value
 
 def load_datasets(config):
-    """Load training, validation, and test datasets."""
+    """Load training and validation datasets."""
     logger.info("Loading datasets...")
 
     # Load datasets with memory-efficient settings
@@ -62,22 +62,20 @@ def load_datasets(config):
         return_full_audio=True,
         max_duration=config.audio.max_duration
     )
-    test_files = list(Path(config.dataset.test_dir).glob("*.mp3"))
 
-    # Create artist_to_id mapping
+    # Removed test files loading
     artist_to_id = get_artist_mapping(config.dataset.train_json)
 
     logger.info(f"Loaded {len(train_dataset)} training samples")
     logger.info(f"Loaded {len(val_dataset)} validation samples")
-    logger.info(f"Found {len(test_files)} test files")
 
-    return train_dataset, val_dataset, test_files, artist_to_id
+    return train_dataset, val_dataset, artist_to_id
 
 def extract_features(datasets, config):
     """Extract audio features for all datasets."""
     logger.info("Extracting features...")
 
-    train_dataset, val_dataset, test_files, artist_to_id = datasets
+    train_dataset, val_dataset, artist_to_id = datasets
 
     feature_extractor = AudioFeatureExtractor(config)
 
@@ -85,30 +83,11 @@ def extract_features(datasets, config):
     X_train, y_train = extract_features_from_dataset(train_dataset, config)
     X_val, y_val = extract_features_from_dataset(val_dataset, config)
 
-    # Extract features from test files
-    X_test = []
-    test_filenames = []
-
-    for test_file in sorted(test_files):
-        logger.info(f"Processing test file: {test_file.name}")
-        # Load audio file first, then extract features
-        try:
-            audio, sr = load_audio_file(str(test_file), sample_rate=config.audio.sample_rate)
-            features = feature_extractor.extract_features(audio)
-            X_test.append(features)
-            test_filenames.append(test_file.stem)  # Get filename without extension
-        except Exception as e:
-            logger.error(f"Failed to process test file {test_file.name}: {e}")
-            continue
-
-    X_test = np.array(X_test)
-
     logger.info(f"Training features shape: {X_train.shape}")
     logger.info(f"Validation features shape: {X_val.shape}")
-    logger.info(f"Test features shape: {X_test.shape}")
     logger.info(f"Number of unique classes: {len(set(y_train))}")
 
-    return (X_train, y_train), (X_val, y_val), (X_test, test_filenames)
+    return (X_train, y_train), (X_val, y_val)
 
 def train_model(model_type, config, train_data, val_data, artist_to_id):
     """Train a single ML model."""
@@ -136,19 +115,19 @@ def train_model(model_type, config, train_data, val_data, artist_to_id):
 
     return model, metrics
 
-def plot_confusion_matrix(confusion_matrix, class_names, model_type):
+def plot_confusion_matrix(confusion_matrix, class_names, save_dir):
     """Plot and save confusion matrix using matplotlib and seaborn."""
     plt.figure(figsize=(10, 8))
     sns.heatmap(confusion_matrix, annot=True, fmt="d", cmap="Blues", xticklabels=class_names, yticklabels=class_names)
-    plt.title(f"Confusion Matrix - {model_type}")
+    plt.title("Confusion Matrix")
     plt.xlabel("Predicted Labels")
     plt.ylabel("True Labels")
     plt.tight_layout()
-    plt.show()
 
-    # Ensure the directory exists before saving
-    os.makedirs('results/visualizations', exist_ok=True)
-    plt.savefig('results/visualizations/confusion_matrix.png')
+    # Ensure save directory exists
+    os.makedirs("results/visualizations", exist_ok=True)
+    save_path = os.path.join("results/visualizations", f"confusion_matrix_{save_dir}.png")
+    plt.savefig(save_path)
     plt.close()
 
 def hyperparameter_tuning(model_type, config, train_data):
@@ -239,7 +218,7 @@ def main(cfg: DictConfig):
         datasets = load_datasets(config)
 
         # Step 2: Extract features
-        train_data, val_data, test_data = extract_features(datasets, config)
+        train_data, val_data = extract_features(datasets, config)
 
         # Step 3: Train models
         models = {}
@@ -255,7 +234,7 @@ def main(cfg: DictConfig):
                 # tuning_results = hyperparameter_tuning(model_type, config, train_data)
 
                 # Train model
-                model, metrics = train_model(model_type, config, train_data, val_data, datasets[3])
+                model, metrics = train_model(model_type, config, train_data, val_data, datasets[2])
 
                 # Save model
                 save_model(model, model_type, config)

@@ -15,12 +15,12 @@ traditional_ml:
     channels: 1
   audio:
     sample_rate: 16000
-    n_fft: 1024
+    n_fft: 2048
     hop_length: 512
     n_mels: 128
     f_min: 80.0
     f_max: 8000.0
-    max_duration: 10.0
+    max_duration: 15.0
     normalize: true
   data_split:
     train_ratio: 0.8
@@ -112,7 +112,7 @@ traditional_ml:
     dimensionality_reduction:
       method: null
       n_components: 0.95
-    silence_db_threshold: -60
+    silence_db_threshold: 30
   models:
     knn:
       n_neighbors:
