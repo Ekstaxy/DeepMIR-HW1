@@ -258,9 +258,15 @@ class AudioFeatureExtractor:
             hop_length=config.features.tonnetz.hop_length
         )
 
+    def _remove_silence(self, audio: np.ndarray) -> np.ndarray:
+        """Remove silent segments from audio."""
+        non_silent_intervals = librosa.effects.split(audio, top_db=self.config.preprocessing.silence_db_threshold)
+        non_silent_audio = np.concatenate([audio[start:end] for start, end in non_silent_intervals])
+        return non_silent_audio
+
     def extract_features(self, audio: np.ndarray) -> np.ndarray:
         """
-        Extract all configured features from audio.
+        Extract all configured features from audio after removing silence.
 
         Args:
             audio: Audio signal
@@ -268,6 +274,9 @@ class AudioFeatureExtractor:
         Returns:
             Concatenated feature vector
         """
+        # Remove silence
+        audio = self._remove_silence(audio)
+
         features = []
 
         if 'mfcc' in self.config.features.extract_features:
