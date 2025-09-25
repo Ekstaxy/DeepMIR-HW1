@@ -27,7 +27,7 @@ audio:
   n_mels: 128
   f_min: 80.0
   f_max: 8000.0
-  max_duration: 20.0  # seconds
+  max_duration: 15.0  # seconds
   normalize: true
 
 # Data splitting

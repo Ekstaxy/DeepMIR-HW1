@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union, Tuple, Callable
 import logging
 import numpy as np
+import librosa
 
 from .utils import (
     load_audio_file,
@@ -178,6 +179,10 @@ class Artist20Dataset(Dataset):
             target_length = int(self.sample_rate * (self.max_duration or 10.0))
             audio = np.zeros(target_length, dtype=np.float32)
 
+        # Remove silent parts
+        non_silent_intervals = librosa.effects.split(audio, top_db=30)
+        audio = np.concatenate([audio[start:end] for start, end in non_silent_intervals])
+
         if self.return_full_audio:
             # Apply transforms
             audio_tensor = self.transform(audio) if self.transform else audio
@@ -186,7 +191,7 @@ class Artist20Dataset(Dataset):
             return audio_tensor, label
 
         # Excerpt logic
-        chunk_size = int(self.sample_rate * (self.max_duration or 10.0))
+        chunk_size = int(self.sample_rate * self.max_duration)
         num_excerpts = 5
         max_attempts = 20
         excerpts = []
