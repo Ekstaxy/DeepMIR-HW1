@@ -13,7 +13,7 @@ experiment:
 
 # Model architecture
 model:
-  name: "ShortChunkCNN"  # ShortChunkCNN or ShortChunkCNN_Res
+  name: "ShortChunkCNN_Res"  # ShortChunkCNN or ShortChunkCNN_Res
   n_channels: 128
   n_fft: 1024  # Reduced from 2048 to handle shorter audio chunks
   hop_length: 256  # Reduced proportionally
