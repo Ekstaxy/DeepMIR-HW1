@@ -64,7 +64,7 @@ preprocessing:
     method: null  # pca, lda, null
     n_components: 0.95  # keep 95% variance for PCA
   
-  silence_db_threshold: -30  # dB threshold for silence removal
+  silence_db_threshold: -60  # dB threshold for silence removal
 
 # Model configurations
 models:
