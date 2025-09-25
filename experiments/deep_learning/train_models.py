@@ -486,6 +486,7 @@ def plot_confusion_matrix(conf_matrix, class_names):
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
     plt.title("Confusion Matrix")
+    plt.savefig("confusion_matrix.png")
     plt.show()
 
 
