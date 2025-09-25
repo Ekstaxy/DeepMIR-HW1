@@ -189,14 +189,6 @@ class Artist20Dataset(Dataset):
             if not isinstance(audio_tensor, torch.Tensor):
                 audio_tensor = torch.from_numpy(audio_tensor).float()
 
-            # Pad or truncate to ensure consistent length
-            target_length = int(self.sample_rate * self.max_duration)
-            if audio_tensor.size(0) < target_length:
-                padding = target_length - audio_tensor.size(0)
-                audio_tensor = torch.nn.functional.pad(audio_tensor, (0, padding))
-            elif audio_tensor.size(0) > target_length:
-                audio_tensor = audio_tensor[:target_length]
-
             return audio_tensor, label
 
         # Excerpt logic
