@@ -249,19 +249,26 @@ def validate_epoch(model, val_loader, criterion, device):
             for data, target in pbar:
                 # Handle multiple excerpts per sample
                 batch_size, num_excerpts, audio_length = data.size()
-                data = data.view(batch_size * num_excerpts, audio_length).to(device)
-                target = target.repeat_interleave(num_excerpts).to(device)
+                data = data.view(batch_size, num_excerpts, audio_length).to(device)
+                target = target.to(device)
 
-                output = model(data)
-                loss = criterion(output, target)
+                # Average outputs across excerpts
+                outputs = []
+                for excerpt_idx in range(num_excerpts):
+                    excerpt_data = data[:, excerpt_idx, :]
+                    output = model(excerpt_data)
+                    outputs.append(output)
+                averaged_output = torch.mean(torch.stack(outputs), dim=0)
+
+                loss = criterion(averaged_output, target)
 
                 total_loss += loss.item()
-                _, predicted = output.max(1)
+                _, predicted = averaged_output.max(1)
                 total += target.size(0)
                 correct += predicted.eq(target).sum().item()
 
                 # Store for top-k metrics
-                all_predictions.append(output.cpu())
+                all_predictions.append(averaged_output.cpu())
                 all_targets.append(target.cpu())
                 all_pred_labels.extend(predicted.cpu().numpy().tolist())
                 all_true_labels.extend(target.cpu().numpy().tolist())
@@ -520,7 +527,7 @@ def plot_training_curves(train_loss, train_acc, val_loss, val_acc):
     plt.legend()
 
     plt.tight_layout()
-    plt.savefig('/results/visualizations/training_curves.png')
+    plt.savefig('results/visualizations/training_curves.png')
     plt.close()
 
 
