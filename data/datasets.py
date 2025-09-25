@@ -188,6 +188,15 @@ class Artist20Dataset(Dataset):
             audio_tensor = self.transform(audio) if self.transform else audio
             if not isinstance(audio_tensor, torch.Tensor):
                 audio_tensor = torch.from_numpy(audio_tensor).float()
+
+            # Pad or truncate to ensure consistent length
+            target_length = int(self.sample_rate * self.max_duration)
+            if audio_tensor.size(0) < target_length:
+                padding = target_length - audio_tensor.size(0)
+                audio_tensor = torch.nn.functional.pad(audio_tensor, (0, padding))
+            elif audio_tensor.size(0) > target_length:
+                audio_tensor = audio_tensor[:target_length]
+
             return audio_tensor, label
 
         # Excerpt logic
@@ -218,6 +227,14 @@ class Artist20Dataset(Dataset):
             excerpt = self.transform(chunk) if self.transform else chunk
             if not isinstance(excerpt, torch.Tensor):
                 excerpt = torch.from_numpy(excerpt).float()
+
+            # Pad or truncate excerpts
+            if excerpt.size(0) < chunk_size:
+                padding = chunk_size - excerpt.size(0)
+                excerpt = torch.nn.functional.pad(excerpt, (0, padding))
+            elif excerpt.size(0) > chunk_size:
+                excerpt = excerpt[:chunk_size]
+
             excerpts.append(excerpt)
 
         # Stack excerpts: shape (5, audio_length)
