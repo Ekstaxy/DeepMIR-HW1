@@ -375,7 +375,7 @@ def train_model(model, train_loader, val_loader, config, device, tracker, artist
                 logger.info(f"New best model: {best_val_acc:.4f}% accuracy")
                 print(f"Top3 Accuracy: {val_metrics['top3_accuracy']:.4f}%")
                 print("\nConfusion Matrix:")
-                plot_confusion_matrix(val_metrics['confusion_matrix'], class_names=list(artist_to_id.keys()))
+                plot_confusion_matrix(val_metrics['confusion_matrix'], class_names=list(artist_to_id.keys()), save_dir="results/visualizations")
             else:
                 early_stopping_counter += 1
 
@@ -479,15 +479,20 @@ def generate_test_predictions(model, test_loader, artist_to_id, config, device):
     return predictions_path
 
 
-def plot_confusion_matrix(conf_matrix, class_names):
-    """Visualize confusion matrix using matplotlib and seaborn."""
+def plot_confusion_matrix(confusion_matrix, class_names, save_dir):
+    """Plot and save confusion matrix using matplotlib and seaborn."""
     plt.figure(figsize=(10, 8))
-    sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", xticklabels=class_names, yticklabels=class_names)
-    plt.xlabel("Predicted")
-    plt.ylabel("Actual")
+    sns.heatmap(confusion_matrix, annot=True, fmt="d", cmap="Blues", xticklabels=class_names, yticklabels=class_names)
     plt.title("Confusion Matrix")
-    plt.savefig("confusion_matrix.png")
-    plt.show()
+    plt.xlabel("Predicted Labels")
+    plt.ylabel("True Labels")
+    plt.tight_layout()
+
+    # Ensure save directory exists
+    os.makedirs(save_dir, exist_ok=True)
+    save_path = os.path.join(save_dir, "confusion_matrix.png")
+    plt.savefig(save_path)
+    plt.close()
 
 
 def plot_training_curves(train_loss, train_acc, val_loss, val_acc):
@@ -515,7 +520,7 @@ def plot_training_curves(train_loss, train_acc, val_loss, val_acc):
     plt.legend()
 
     plt.tight_layout()
-    plt.savefig('training_curves.png')
+    plt.savefig('/results/visualization/training_curves.png')
     plt.close()
 
 
