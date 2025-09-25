@@ -62,7 +62,7 @@ class Artist20Dataset(Dataset):
         with open(self.json_file_path, 'r') as f:
             self.file_paths = json.load(f)
 
-        self.file_paths = self.file_paths[:5]
+        # self.file_paths = self.file_paths[:5]
         # Convert relative paths to absolute and handle vocals suffix
         self.absolute_paths = []
         for file_path in self.file_paths:
