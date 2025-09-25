@@ -25,7 +25,7 @@ from models.traditional.ml_models import (
 )
 from models.traditional.feature_extractors import AudioFeatureExtractor, extract_features_from_dataset
 from data.datasets import Artist20Dataset
-from data.utils import load_audio_file
+from data.utils import load_audio_file, get_artist_mapping
 from experiments.tracking import ExperimentTracker
 
 logger = logging.getLogger(__name__)
@@ -62,17 +62,20 @@ def load_datasets(config):
     )
     test_files = list(Path(config.dataset.test_dir).glob("*.mp3"))
 
+    # Create artist_to_id mapping
+    artist_to_id = get_artist_mapping(config.dataset.train_json)
+
     logger.info(f"Loaded {len(train_dataset)} training samples")
     logger.info(f"Loaded {len(val_dataset)} validation samples")
     logger.info(f"Found {len(test_files)} test files")
 
-    return train_dataset, val_dataset, test_files
+    return train_dataset, val_dataset, test_files, artist_to_id
 
 def extract_features(datasets, config):
     """Extract audio features for all datasets."""
     logger.info("Extracting features...")
 
-    train_dataset, val_dataset, test_files = datasets
+    train_dataset, val_dataset, test_files, artist_to_id = datasets
 
     feature_extractor = AudioFeatureExtractor(config)
 
@@ -105,7 +108,7 @@ def extract_features(datasets, config):
 
     return (X_train, y_train), (X_val, y_val), (X_test, test_filenames)
 
-def train_model(model_type, config, train_data, val_data):
+def train_model(model_type, config, train_data, val_data, artist_to_id):
     """Train a single ML model."""
     logger.info(f"Training {model_type} model...")
 
@@ -124,7 +127,7 @@ def train_model(model_type, config, train_data, val_data):
     metrics = evaluator.evaluate_model(model, X_val, y_val)
 
     # Retrieve class names from artist_to_id mapping
-    class_names = list(config.dataset.artist_to_id.keys())
+    class_names = list(artist_to_id.keys())
 
     # Plot confusion matrix
     plot_confusion_matrix(metrics['confusion_matrix'], class_names, model_type)
@@ -198,6 +201,7 @@ def generate_test_predictions_for_best_model(models, test_data, config):
     # Generate predictions
     predictions_dir = Path(config.paths.predictions)
     predictions_dir.mkdir(parents=True, exist_ok=True)
+    
     predictions_path = predictions_dir / "test_predictions.json"
 
     predictions = generate_test_predictions(best_model, X_test, test_filenames, predictions_path)
@@ -244,7 +248,7 @@ def main(cfg: DictConfig):
                 # tuning_results = hyperparameter_tuning(model_type, config, train_data)
 
                 # Train model
-                model, metrics = train_model(model_type, config, train_data, val_data)
+                model, metrics = train_model(model_type, config, train_data, val_data, datasets[3])
 
                 # Save model
                 save_model(model, model_type, config)
@@ -272,10 +276,10 @@ def main(cfg: DictConfig):
                 logger.error(f"Failed to train {model_type}: {e}")
                 continue
 
-        # Step 4: Generate final predictions
-        if models:
-            predictions_path = generate_test_predictions_for_best_model(models, test_data, config)
-            logger.info(f"Test predictions saved to: {predictions_path}")
+        # # Step 4: Generate final predictions
+        # if models:
+        #     predictions_path = generate_test_predictions_for_best_model(models, test_data, config)
+        #     logger.info(f"Test predictions saved to: {predictions_path}")
 
         # Step 5: Print final summary
         logger.info(f"\n{'='*50}")

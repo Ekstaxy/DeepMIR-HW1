@@ -520,7 +520,7 @@ def plot_training_curves(train_loss, train_acc, val_loss, val_acc):
     plt.legend()
 
     plt.tight_layout()
-    plt.savefig('/results/visualization/training_curves.png')
+    plt.savefig('/results/visualizations/training_curves.png')
     plt.close()
 
 
