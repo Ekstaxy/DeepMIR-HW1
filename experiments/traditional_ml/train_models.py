@@ -144,6 +144,9 @@ def plot_confusion_matrix(confusion_matrix, class_names, model_type):
     plt.tight_layout()
     plt.show()
 
+    plt.savefig('/results/visualizations/confusion_matrix.png')
+    plt.close()
+
 def hyperparameter_tuning(model_type, config, train_data):
     """Perform hyperparameter tuning for a model."""
     logger.info(f"Tuning hyperparameters for {model_type}...")
