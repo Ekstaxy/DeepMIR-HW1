@@ -50,13 +50,15 @@ def load_datasets(config):
         config.dataset.train_json,
         root_dir=config.dataset.root_path,
         sample_rate=config.dataset.sample_rate,
-        validate_files=False  # Skip validation to avoid loading all files
+        validate_files=False,
+        return_full_audio=True
     )
     val_dataset = Artist20Dataset(
         config.dataset.val_json,
         root_dir=config.dataset.root_path,
         sample_rate=config.dataset.sample_rate,
-        validate_files=False  # Skip validation to avoid loading all files
+        validate_files=False,
+        return_full_audio=True
     )
     test_files = list(Path(config.dataset.test_dir).glob("*.mp3"))
 
