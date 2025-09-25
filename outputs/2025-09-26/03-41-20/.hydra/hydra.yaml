@@ -118,7 +118,7 @@ hydra:
     override_dirname: ''
     id: ???
     num: ???
-    config_name: deep_learning/baseline_config
+    config_name: traditional_ml/baseline_config
     env_set: {}
     env_copy: []
     config:
@@ -140,7 +140,7 @@ hydra:
     - path: ''
       schema: structured
       provider: schema
-    output_dir: C:\Users\AJChen2005\Documents\GitHub\DeepMIR-HW1\outputs\2025-09-24\11-27-52
+    output_dir: C:\Users\AJChen2005\Documents\GitHub\DeepMIR-HW1\outputs\2025-09-26\03-41-20
     choices:
       hydra/env: default
       hydra/callbacks: null
