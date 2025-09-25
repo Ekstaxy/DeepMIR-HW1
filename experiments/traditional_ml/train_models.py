@@ -111,7 +111,7 @@ def plot_confusion_matrix(confusion_matrix, class_names, model_type):
     plt.xlabel("Predicted Labels")
     plt.ylabel("True Labels")
     plt.tight_layout()
-    plt.savefig(f"confusion_matrix_{model_type}.png")
+    plt.savefig(f"/results/visualization/confusion_matrix_{model_type}.png")
     plt.close()
 
 def train_model(model_type, config, train_data, val_data):
@@ -217,8 +217,7 @@ def main(cfg: DictConfig):
         config=config,
         experiment_name=f"traditional_ml_{config.experiment.name}",
         tags=["traditional_ml", "classification"],
-        notes="Training k-NN, SVM, and Random Forest classifiers",
-        use_wandb=bool(config.wandb.project)
+        notes="Training k-NN, SVM, and Random Forest classifiers"
     )
 
     try:
