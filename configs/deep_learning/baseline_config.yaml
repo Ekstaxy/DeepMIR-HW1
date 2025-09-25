@@ -70,7 +70,7 @@ data_augmentation:
 # Optimizer settings
 optimizer:
   name: "adam"
-  learning_rate: 0.001
+  learning_rate: 0.002
   weight_decay: 0.0001
 
   # Adam specific
@@ -116,15 +116,15 @@ loss:
 # Training settings (override base)
 training:
   batch_size: 16
-  num_epochs: 100
-  early_stopping_patience: 15
+  num_epochs: 80
+  early_stopping_patience: 10
   gradient_clip_norm: 1.0
 
   # Validation frequency
   validate_every: 1  # epochs
 
   # Checkpoint saving
-  save_every: 15  # epochs
+  save_every: 20  # epochs
   save_best_only: true
 
 # Model compilation
