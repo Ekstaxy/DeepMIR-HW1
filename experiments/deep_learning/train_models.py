@@ -547,7 +547,7 @@ def main(cfg: DictConfig):
         experiment_name=experiment_name,
         tags=["deep_learning", "cnn", "classification"],
         notes="Training CNN models for end-to-end singer classification",
-        use_wandb=bool(config.wandb.project)
+        use_wandb=False
     )
 
     try:
