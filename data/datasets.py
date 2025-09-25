@@ -34,7 +34,8 @@ class Artist20Dataset(Dataset):
         transform: Optional[Callable] = None,
         sample_rate: int = 16000,
         max_duration: Optional[float] = None,
-        validate_files: bool = True
+        validate_files: bool = True,
+        return_full_audio: bool = False
     ):
         """
         Initialize Artist20Dataset.
@@ -47,12 +48,14 @@ class Artist20Dataset(Dataset):
             sample_rate: Sample rate for audio loading
             max_duration: Maximum duration in seconds
             validate_files: Validate audio files during initialization
+            return_full_audio: Return full audio instead of excerpts
         """
         self.json_file_path = Path(json_file_path)
         self.root_dir = Path(root_dir)
         self.transform = transform
         self.sample_rate = sample_rate
         self.max_duration = max_duration
+        self.return_full_audio = return_full_audio
 
         # Load file paths from JSON
         with open(self.json_file_path, 'r') as f:
@@ -154,8 +157,7 @@ class Artist20Dataset(Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
         """
-        Return 5 random non-silent excerpts (10 sec each) from the audio sample.
-        Returns shape: (num_excerpts, audio_length)
+        Return full audio or excerpts based on the flag.
         """
         if idx >= len(self.valid_indices):
             raise IndexError(f"Index {idx} out of range for dataset of size {len(self)}")
@@ -176,12 +178,20 @@ class Artist20Dataset(Dataset):
             target_length = int(self.sample_rate * (self.max_duration or 10.0))
             audio = np.zeros(target_length, dtype=np.float32)
 
+        if self.return_full_audio:
+            # Apply transforms
+            audio_tensor = self.transform(audio) if self.transform else audio
+            if not isinstance(audio_tensor, torch.Tensor):
+                audio_tensor = torch.from_numpy(audio_tensor).float()
+            return audio_tensor, label
+
+        # Excerpt logic
         chunk_size = int(self.sample_rate * (self.max_duration or 10.0))
         num_excerpts = 5
         max_attempts = 20
         excerpts = []
         used_starts = set()
-        
+
         for _ in range(num_excerpts):
             found = False
             for _ in range(max_attempts):
@@ -198,7 +208,7 @@ class Artist20Dataset(Dataset):
                     break
             if not found:
                 chunk = audio[:chunk_size]
-            
+
             # Apply transforms
             excerpt = self.transform(chunk) if self.transform else chunk
             if not isinstance(excerpt, torch.Tensor):
