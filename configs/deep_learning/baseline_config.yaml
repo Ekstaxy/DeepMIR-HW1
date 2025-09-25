@@ -15,8 +15,8 @@ experiment:
 model:
   name: "ShortChunkCNN_Res"  # ShortChunkCNN or ShortChunkCNN_Res
   n_channels: 128
-  n_fft: 1024  # Reduced from 2048 to handle shorter audio chunks
-  hop_length: 256  # Reduced proportionally
+  n_fft: 2048  # Reduced from 2048 to handle shorter audio chunks
+  hop_length: 512  # Reduced proportionally
   f_min: 80.0
   f_max: 8000.0
   n_mels: 80
@@ -116,7 +116,7 @@ loss:
 # Training settings (override base)
 training:
   batch_size: 16
-  num_epochs: 80
+  num_epochs: 60
   early_stopping_patience: 10
   gradient_clip_norm: 1.0
 
