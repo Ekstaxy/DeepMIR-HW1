@@ -26,21 +26,21 @@ features:
 
   # MFCC settings
   mfcc:
-    n_mfcc: 13
-    n_fft: 2048
+    n_mfcc: 15
+    n_fft: 4096
     hop_length: 512
     delta: true      # include delta features
     delta2: true     # include delta-delta features
 
   # Spectral features
   spectral:
-    n_fft: 2048
+    n_fft: 4096
     hop_length: 512
 
   # Chroma features
   chroma:
     n_chroma: 12
-    n_fft: 2048
+    n_fft: 4096
     hop_length: 512
 
   # Tonnetz features
@@ -52,8 +52,8 @@ features:
 preprocessing:
   # Aggregation methods for time-series features
   aggregation:
-    # methods: ["mean", "std", "min", "max", "median"]
-    methods: ["max", "std"]
+    methods: ["mean", "std", "min", "max", "median"]
+    # methods: ["max", "std"]
 
   # Normalization
   normalization:

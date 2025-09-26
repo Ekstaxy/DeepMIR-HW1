@@ -194,7 +194,7 @@ class Artist20Dataset(Dataset):
 
         # Excerpt logic
         chunk_size = int(self.sample_rate * self.max_duration)
-        num_excerpts = 5
+        num_excerpts = 35
         max_attempts = 20
         excerpts = []
         used_starts = set()
