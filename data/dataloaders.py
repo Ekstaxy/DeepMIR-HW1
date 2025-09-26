@@ -151,10 +151,6 @@ def create_test_dataloader(
     elif experiment_type == "deep_learning":
         transform = create_deep_learning_transforms(
             sample_rate=config.audio.sample_rate,
-            target_duration=config.audio.max_duration,
-            n_mels=config.audio.n_mels,
-            n_fft=config.audio.n_fft,
-            hop_length=config.audio.hop_length,
             training=False  # No augmentation for test
         )
     else:
