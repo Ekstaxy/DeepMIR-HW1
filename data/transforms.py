@@ -200,8 +200,6 @@ class AudioPad:
             pad_left = pad_width // 2
             pad_right = pad_width - pad_left
             return np.pad(audio, (pad_left, pad_right), mode=self.mode)
-
-
 class AudioToMelSpectrogram:
     """Convert audio to mel-spectrogram."""
 
@@ -281,7 +279,6 @@ class AudioToMelSpectrogram:
         else:
             return mel_spec
 
-
 class AudioToTensor:
     """Convert audio numpy array to PyTorch tensor."""
 
@@ -305,38 +302,6 @@ class AudioToTensor:
             Audio tensor
         """
         return torch.from_numpy(audio).to(self.dtype)
-
-
-class MelSpectrogramToTensor:
-    """Convert mel-spectrogram to PyTorch tensor with proper shape."""
-
-    def __init__(self, add_channel_dim: bool = True):
-        """
-        Initialize tensor conversion.
-
-        Args:
-            add_channel_dim: Add channel dimension for CNN input
-        """
-        self.add_channel_dim = add_channel_dim
-
-    def __call__(self, mel_spec: np.ndarray) -> torch.Tensor:
-        """
-        Convert mel-spectrogram to tensor.
-
-        Args:
-            mel_spec: Mel-spectrogram array (n_mels, time)
-
-        Returns:
-            Tensor of shape (1, n_mels, time) if add_channel_dim else (n_mels, time)
-        """
-        tensor = torch.from_numpy(mel_spec).float()
-
-        if self.add_channel_dim:
-            # Add channel dimension for CNN: (n_mels, time) -> (1, n_mels, time)
-            tensor = tensor.unsqueeze(0)
-
-        return tensor
-
 
 class TimeShift:
     """Randomly shift audio in time (data augmentation)."""
@@ -413,6 +378,58 @@ class AddNoise:
         return audio + noise_level * noise
 
 
+class TimeStretch:
+    """Time-stretch audio without changing pitch using librosa."""
+
+    def __init__(self, min_rate: float = 0.95, max_rate: float = 1.10, probability: float = 0.3):
+        """
+        Initialize time-stretch augmentation.
+
+        Args:
+            min_rate: Minimum stretch factor (e.g., 0.8 -> slower)
+            max_rate: Maximum stretch factor (e.g., 1.25 -> faster)
+            probability: Probability of applying augmentation
+        """
+        if min_rate <= 0 or max_rate <= 0:
+            raise ValueError("min_rate and max_rate must be > 0")
+        if min_rate > max_rate:
+            raise ValueError("min_rate must be <= max_rate")
+        self.min_rate = min_rate
+        self.max_rate = max_rate
+        self.probability = probability
+
+    def __call__(self, audio: np.ndarray) -> np.ndarray:
+        """
+        Apply time-stretch to audio.
+
+        Args:
+            audio: 1D numpy array of audio samples
+
+        Returns:
+            Time-stretched audio (1D numpy array)
+        """
+        if np.random.random() > self.probability:
+            return audio
+
+        # Pick a random rate in [min_rate, max_rate]
+        rate = np.random.uniform(self.min_rate, self.max_rate)
+
+        # librosa.effects.time_stretch expects a mono signal
+        if audio.ndim != 1:
+            # If stereo, average to mono first
+            audio_mono = np.mean(audio, axis=0)
+        else:
+            audio_mono = audio
+
+        try:
+            stretched = librosa.effects.time_stretch(audio_mono.astype(float), rate)
+        except Exception as e:
+            logger.warning(f"TimeStretch failed: {e}")
+            return audio
+
+        return stretched
+
+
 def create_traditional_ml_transforms(
     sample_rate: int = 16000,
     target_duration: Optional[float] = None
@@ -441,50 +458,29 @@ def create_traditional_ml_transforms(
 
 def create_deep_learning_transforms(
     sample_rate: int = 16000,
-    target_duration: float = 30.0,
-    n_mels: int = 128,
-    n_fft: int = 2048,
-    hop_length: int = 512,
     training: bool = True
 ) -> ComposeTransforms:
     """
     Create transform pipeline for deep learning.
 
     Args:
-        sample_rate: Target sample rate
-        target_duration: Target duration in seconds
-        n_mels: Number of mel frequency bins
-        n_fft: FFT window size
-        hop_length: Hop length for STFT
+        sample_rate: Target sample rate 
         training: Whether to include data augmentation
 
     Returns:
         Composed transforms
     """
-    target_length = int(sample_rate * target_duration)
-
     transforms = [
         AudioToMono(),
         AudioNormalize(method="peak"),
-        AudioPad(target_length)
     ]
 
     # Add data augmentation for training
     if training:
         transforms.extend([
             TimeShift(max_shift=0.1, probability=0.3),
+            TimeStretch(min_rate=0.9, max_rate=1.15, probability=0.3),
             AddNoise(noise_factor=0.005, probability=0.2)
         ])
-
-    # Convert to mel-spectrogram
-    transforms.extend([
-        AudioToMelSpectrogram(
-            sample_rate=sample_rate,
-            n_fft=n_fft,
-            hop_length=hop_length,
-            n_mels=n_mels
-        ),
-        MelSpectrogramToTensor(add_channel_dim=True)
-    ])
 
     return ComposeTransforms(transforms)

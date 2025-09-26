@@ -22,7 +22,7 @@ dataset:
 # Audio preprocessing
 audio:
   sample_rate: 16000
-  n_fft: 2048  # Reduced from 2048 to handle shorter audio chunks
+  n_fft: 4096  # Reduced from 2048 to handle shorter audio chunks
   hop_length: 512  # Reduced proportionally
   n_mels: 128
   f_min: 80.0

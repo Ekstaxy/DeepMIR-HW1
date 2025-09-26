@@ -53,17 +53,11 @@ def create_dataloaders(
         train_transform = create_deep_learning_transforms(
             sample_rate=config.audio.sample_rate,
             target_duration=config.audio.max_duration,
-            n_mels=config.audio.n_mels,
-            n_fft=config.audio.n_fft,
-            hop_length=config.audio.hop_length,
             training=True
         )
         val_transform = create_deep_learning_transforms(
             sample_rate=config.audio.sample_rate,
             target_duration=config.audio.max_duration,
-            n_mels=config.audio.n_mels,
-            n_fft=config.audio.n_fft,
-            hop_length=config.audio.hop_length,
             training=False
         )
     else:
@@ -74,7 +68,7 @@ def create_dataloaders(
         json_file_path=train_json,
         root_dir=root_dir,
         artist_to_id=artist_to_id,
-        transform=None,
+        transform=train_transform,
         sample_rate=config.audio.sample_rate,
         max_duration=config.audio.max_duration,
         validate_files=True
