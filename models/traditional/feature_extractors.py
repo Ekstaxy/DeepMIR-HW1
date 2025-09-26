@@ -303,13 +303,13 @@ class AudioFeatureExtractor:
 
     def _aggregate_features(self, features: np.ndarray) -> np.ndarray:
         """
-        Aggregate time-series features to fixed-size vectors.
+        Aggregate time-series features to fixed-size vectors and standardize the aggregated features.
 
         Args:
             features: Feature matrix of shape (n_features, n_frames)
 
         Returns:
-            Aggregated feature vector
+            Standardized aggregated feature vector
         """
         aggregated = []
         methods = self.config.preprocessing.aggregation.methods
@@ -328,7 +328,14 @@ class AudioFeatureExtractor:
             else:
                 logger.warning(f"Unknown aggregation method: {method}")
 
-        return np.concatenate(aggregated)
+        aggregated_features = np.concatenate(aggregated)
+
+        # Standardize the aggregated features
+        mean = np.mean(aggregated_features)
+        std = np.std(aggregated_features)
+        standardized_features = (aggregated_features - mean) / (std + 1e-8)  # Avoid division by zero
+
+        return standardized_features
 
     def extract_features_batch(self, audio_list: List[np.ndarray]) -> np.ndarray:
         """
