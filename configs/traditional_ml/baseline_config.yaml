@@ -20,9 +20,9 @@ features:
     - "spectral_rolloff"
     - "spectral_bandwidth"
     - "zero_crossing_rate"
-    - "tempo"
-    - "chroma"
-    - "tonnetz"
+    # - "tempo"
+    # - "chroma"
+    # - "tonnetz"
 
   # MFCC settings
   mfcc:
