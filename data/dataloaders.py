@@ -52,12 +52,10 @@ def create_dataloaders(
     elif experiment_type == "deep_learning":
         train_transform = create_deep_learning_transforms(
             sample_rate=config.audio.sample_rate,
-            target_duration=config.audio.max_duration,
             training=True
         )
         val_transform = create_deep_learning_transforms(
             sample_rate=config.audio.sample_rate,
-            target_duration=config.audio.max_duration,
             training=False
         )
     else:
