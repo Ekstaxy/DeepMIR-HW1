@@ -422,7 +422,7 @@ class TimeStretch:
             audio_mono = audio
 
         try:
-            stretched = librosa.effects.time_stretch(audio_mono.astype(float), rate)
+            stretched = librosa.effects.time_stretch(y=audio_mono.astype(float), rate=rate)
         except Exception as e:
             logger.warning(f"TimeStretch failed: {e}")
             return audio
@@ -478,8 +478,7 @@ def create_deep_learning_transforms(
     # Add data augmentation for training
     if training:
         transforms.extend([
-            TimeShift(max_shift=0.1, probability=0.3),
-            TimeStretch(min_rate=0.9, max_rate=1.15, probability=0.3),
+            TimeStretch(min_rate=0.95, max_rate=1.10, probability=0.3),
             AddNoise(noise_factor=0.005, probability=0.2)
         ])
 
