@@ -1,31 +1,31 @@
 # Core ML libraries
-torch>=2.0.0
-torchaudio>=2.0.0
-torchvision>=0.15.0
+torch
+torchaudio
+torchvision
 
 # Audio processing
-librosa>=0.10.0
-soundfile>=0.12.0
+librosa
+soundfile
 
 # Traditional ML
-scikit-learn>=1.3.0
-numpy>=1.24.0
-pandas>=2.0.0
+scikit-learn
+numpy
+pandas
 
 # Visualization
-matplotlib>=3.7.0
-seaborn>=0.12.0
+matplotlib
+seaborn
 
 # Experiment tracking
-wandb>=0.15.0
+wandb
 
 # Configuration management
-hydra-core>=1.3.0
-omegaconf>=2.3.0
+hydra-core
+omegaconf
 
 # Progress bars and utilities
-tqdm>=4.65.0
+tqdm
 
 # Jupyter
-jupyter>=1.0.0
-ipywidgets>=8.0.0
+jupyter
+ipywidgets
