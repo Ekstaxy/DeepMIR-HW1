@@ -303,39 +303,37 @@ class AudioFeatureExtractor:
 
     def _aggregate_features(self, features: np.ndarray) -> np.ndarray:
         """
-        Aggregate time-series features to fixed-size vectors and standardize the aggregated features.
+        Normalize time-series features and aggregate them to fixed-size vectors.
 
         Args:
             features: Feature matrix of shape (n_features, n_frames)
 
         Returns:
-            Standardized aggregated feature vector
+            Aggregated feature vector
         """
+        # Normalize features before aggregation
+        mean = np.mean(features, axis=1, keepdims=True)
+        std = np.std(features, axis=1, keepdims=True)
+        normalized_features = (features - mean) / (std + 1e-8)  # Avoid division by zero
+
         aggregated = []
         methods = self.config.preprocessing.aggregation.methods
 
         for method in methods:
             if method == "mean":
-                aggregated.append(np.mean(features, axis=1))
+                aggregated.append(np.mean(normalized_features, axis=1))
             elif method == "std":
-                aggregated.append(np.std(features, axis=1))
+                aggregated.append(np.std(normalized_features, axis=1))
             elif method == "min":
-                aggregated.append(np.min(features, axis=1))
+                aggregated.append(np.min(normalized_features, axis=1))
             elif method == "max":
-                aggregated.append(np.max(features, axis=1))
+                aggregated.append(np.max(normalized_features, axis=1))
             elif method == "median":
-                aggregated.append(np.median(features, axis=1))
+                aggregated.append(np.median(normalized_features, axis=1))
             else:
                 logger.warning(f"Unknown aggregation method: {method}")
 
-        aggregated_features = np.concatenate(aggregated)
-
-        # Standardize the aggregated features
-        mean = np.mean(aggregated_features)
-        std = np.std(aggregated_features)
-        standardized_features = (aggregated_features - mean) / (std + 1e-8)  # Avoid division by zero
-
-        return standardized_features
+        return np.concatenate(aggregated)
 
     def extract_features_batch(self, audio_list: List[np.ndarray]) -> np.ndarray:
         """

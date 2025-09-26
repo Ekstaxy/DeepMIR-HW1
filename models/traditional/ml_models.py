@@ -465,24 +465,4 @@ if __name__ == "__main__":
     """
     Example usage of traditional ML models.
     """
-    # Example usage:
-    # from omegaconf import OmegaConf
-    # config = OmegaConf.load('configs/traditional_ml/baseline_config.yaml')
-    #
-    # # Create and train model
-    # model = create_model('knn', config)
-    # model.fit(X_train, y_train)
-    #
-    # # Evaluate model
-    # evaluator = ModelEvaluator(config)
-    # metrics = evaluator.evaluate_model(model, X_val, y_val)
-    # print(f"Final Score: {metrics['final_score']:.3f}")
-    #
-    # # Hyperparameter tuning
-    # tuner = HyperparameterTuner(config)
-    # best_params = tuner.tune_knn(X_train, y_train)
-    # print(f"Best k-NN params: {best_params['best_params']}")
-    #
-    # # Generate test predictions
-    # predictions = generate_test_predictions(model, X_test, test_filenames, 'predictions.json')
     pass
