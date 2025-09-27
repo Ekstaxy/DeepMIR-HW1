@@ -131,7 +131,7 @@ def plot_confusion_matrix(confusion_matrix, class_names, save_dir):
     plt.close()
 
 def hyperparameter_tuning(model_type, config, train_data):
-    """Perform hyperparameter tuning for a model."""
+    """Perform hyperparameter tuning for a model and return updated config."""
     logger.info(f"Tuning hyperparameters for {model_type}...")
 
     X_train, y_train = train_data
@@ -149,7 +149,11 @@ def hyperparameter_tuning(model_type, config, train_data):
     logger.info(f"Best parameters for {model_type}: {results['best_params']}")
     logger.info(f"Best score for {model_type}: {results['best_score']:.4f}")
 
-    return results
+    # Update the config with the best parameters
+    for param, value in results['best_params'].items():
+        setattr(getattr(config.models, model_type), param, value)
+
+    return config
 
 def save_model(model, model_type, config):
     """Save trained model to disk."""
@@ -231,7 +235,7 @@ def main(cfg: DictConfig):
 
             try:
                 # Optional: Run hyperparameter tuning
-                tuning_results = hyperparameter_tuning(model_type, config, train_data)
+                config = hyperparameter_tuning(model_type, config, train_data)
 
                 # Train model
                 model, metrics = train_model(model_type, config, train_data, val_data, datasets[2])
