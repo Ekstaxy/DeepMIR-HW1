@@ -13,7 +13,7 @@ import json
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier as SklearnRandomForestClassifier
-from sklearn.model_selection import GridSearchCV, cross_val_score
+from sklearn.model_selection import GridSearchCV, cross_val_score, StratifiedKFold
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
@@ -137,9 +137,9 @@ class KNNClassifier(TraditionalMLModel):
         """Initialize k-NN classifier with config parameters."""
         super().__init__(config)
         self.model = KNeighborsClassifier(
-            n_neighbors=config.models.knn.n_neighbors[0],  # Use first value as default
-            weights=config.models.knn.weights[0],
-            metric=config.models.knn.metric[0],
+            n_neighbors=config.models.knn.n_neighbors[0] if isinstance(config.models.knn.n_neighbors, list) else config.models.knn.n_neighbors,
+            weights=config.models.knn.weights[0] if isinstance(config.models.knn.weights, list) else config.models.knn.weights,
+            metric=config.models.knn.metric[0] if isinstance(config.models.knn.metric, list) else config.models.knn.metric,
             n_jobs=-1
         )
 
@@ -343,15 +343,22 @@ class HyperparameterTuner:
         X_scaled = scaler.fit_transform(X)
         y_encoded = label_encoder.fit_transform(y)
 
+        # Dynamically adjust n_neighbors based on the smallest fold size
+        smallest_fold_size = len(y) // 5  # Assuming 5-fold cross-validation
+        max_neighbors = max(1, smallest_fold_size)  # Ensure at least 1 neighbor
+
         param_grid = {
-            'n_neighbors': self.config.models.knn.n_neighbors,
+            'n_neighbors': list(range(1, max_neighbors + 1)),
             'weights': self.config.models.knn.weights,
             'metric': self.config.models.knn.metric
         }
 
         knn = KNeighborsClassifier(n_jobs=-1)
+
+        # Use StratifiedKFold for balanced class distribution
+        stratified_cv = StratifiedKFold(n_splits=5)
         grid_search = GridSearchCV(
-            knn, param_grid, cv=5, scoring='accuracy', n_jobs=-1, verbose=1
+            knn, param_grid, cv=stratified_cv, scoring='accuracy', n_jobs=-1, verbose=1
         )
         grid_search.fit(X_scaled, y_encoded)
 
@@ -386,9 +393,13 @@ class HyperparameterTuner:
         )
         grid_search.fit(X_scaled, y_encoded)
 
+        # Validate grid_search results
+        best_params = grid_search.best_params_ if isinstance(grid_search.best_params_, dict) else {}
+        best_score = grid_search.best_score_ if isinstance(grid_search.best_score_, (float, int)) else None
+
         return {
-            'best_params': grid_search.best_params_,
-            'best_score': grid_search.best_score_,
+            'best_params': best_params,
+            'best_score': best_score,
             'best_model': grid_search.best_estimator_,
             'cv_results': grid_search.cv_results_
         }
@@ -415,14 +426,21 @@ class HyperparameterTuner:
         rf = SklearnRandomForestClassifier(
             random_state=self.config.project.seed, n_jobs=-1
         )
+
+        # Use StratifiedKFold for balanced class distribution
+        stratified_cv = StratifiedKFold(n_splits=3)
         grid_search = GridSearchCV(
-            rf, param_grid, cv=3, scoring='accuracy', n_jobs=-1, verbose=1
+            rf, param_grid, cv=stratified_cv, scoring='accuracy', n_jobs=-1, verbose=1
         )
         grid_search.fit(X_scaled, y_encoded)
 
+        # Validate grid_search results
+        best_params = grid_search.best_params_ if isinstance(grid_search.best_params_, dict) else {}
+        best_score = grid_search.best_score_ if isinstance(grid_search.best_score_, (float, int)) else None
+
         return {
-            'best_params': grid_search.best_params_,
-            'best_score': grid_search.best_score_,
+            'best_params': best_params,
+            'best_score': best_score,
             'best_model': grid_search.best_estimator_,
             'cv_results': grid_search.cv_results_
         }
