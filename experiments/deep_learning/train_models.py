@@ -197,8 +197,8 @@ def train_epoch(model, train_loader, criterion, optimizer, device, config):
             batch_size, num_excerpts, audio_length = data.shape
             
             # Reshape to process all excerpts as separate samples
-            data = data.view(-1, audio_length).to(device)  # (batch_size * 5, audio_length)
-            target = target.repeat_interleave(num_excerpts).to(device)  # (batch_size * 5,)
+            data = data.view(-1, audio_length).to(device)  # (batch_size * num_excerpts, audio_length)
+            target = target.repeat_interleave(num_excerpts).to(device)  # (batch_size * num_excerpts)
 
             optimizer.zero_grad()
             output = model(data)
