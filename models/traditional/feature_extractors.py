@@ -460,14 +460,15 @@ def extract_features_from_dataset(dataset, config, save_path: Optional[str] = No
         labels = []
 
         for i in range(batch_start, batch_end):
-            audio, label = dataset[i]
-            # Convert tensor to numpy array if needed
-            if isinstance(audio, torch.Tensor):
-                audio = audio.numpy()
-            audio_list.append(audio)
-            # Convert integer label back to artist name string
-            artist_name = dataset.get_artist_name(label)
-            labels.append(artist_name)
+            excerpts, label = dataset[i]  # Stack of excerpts
+            for excerpt in excerpts:
+                # Convert tensor to numpy array if needed
+                if isinstance(excerpt, torch.Tensor):
+                    excerpt = excerpt.numpy()
+                audio_list.append(excerpt)
+                # Convert integer label back to artist name string
+                artist_name = dataset.get_artist_name(label)
+                labels.append(artist_name)
 
         logger.info(f"Loaded batch {batch_start//batch_size + 1}/{(len(dataset)-1)//batch_size + 1} ({batch_end - batch_start} samples)")
 
