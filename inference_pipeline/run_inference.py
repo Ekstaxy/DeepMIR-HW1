@@ -128,7 +128,7 @@ def run_inference(data_dir: str, model_path: str, output_dir: str):
 if __name__ == "__main__":
     # Example usage
     run_inference(
-        data_dir="inference_pipeline/data",
+        data_dir="data/raw/artist20/test",
         model_path="inference_pipeline/model/ckpt/ShortChunkCNNRes_ckpt_epoch_52.pt",  # Updated to point to the correct checkpoint file
         output_dir="inference_pipeline/results"
     )
