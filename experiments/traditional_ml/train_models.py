@@ -231,7 +231,7 @@ def main(cfg: DictConfig):
 
             try:
                 # Optional: Run hyperparameter tuning
-                # tuning_results = hyperparameter_tuning(model_type, config, train_data)
+                tuning_results = hyperparameter_tuning(model_type, config, train_data)
 
                 # Train model
                 model, metrics = train_model(model_type, config, train_data, val_data, datasets[2])
