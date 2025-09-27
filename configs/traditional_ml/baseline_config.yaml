@@ -71,22 +71,22 @@ preprocessing:
 models:
   # K-Nearest Neighbors
   knn:
-    n_neighbors: [10, 30, 50]
+    n_neighbors: [3, 5, 7, 10, 15, 30, 50]
     weights: ["distance", "uniform"]
     metric: ["euclidean", "manhattan", "cosine"]
 
   # Support Vector Machine
   svm:
-    C: [10.0, 100.0]
+    C: [0.1, 1, 10.0, 100.0, 1000]
     kernel: [ "linear", "rbf", "poly"]
     gamma: ["scale", "auto", 0.001, 0.01, 0.1]
 
   # Random Forest
   random_forest:
-    n_estimators: [200, 500]
-    max_depth: [30,  null]
-    min_samples_split: [2, 10]
-    min_samples_leaf: [5]
+    n_estimators: [50, 100, 200, 300, 500, 800, 1000]
+    max_depth: [5, 10, 15, 20, 30, 50, null]
+    min_samples_split: [2, 3, 5, 10, 15, 20]
+    min_samples_leaf: [2, 3, 5, 7, 9, 15, 20]
 
   # Gradient Boosting
   gradient_boosting:
