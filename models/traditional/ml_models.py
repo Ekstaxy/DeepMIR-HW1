@@ -137,9 +137,9 @@ class KNNClassifier(TraditionalMLModel):
         """Initialize k-NN classifier with config parameters."""
         super().__init__(config)
         self.model = KNeighborsClassifier(
-            n_neighbors=config.models.knn.n_neighbors[0] if isinstance(config.models.knn.n_neighbors, list) else config.models.knn.n_neighbors,
-            weights=config.models.knn.weights[0] if isinstance(config.models.knn.weights, list) else config.models.knn.weights,
-            metric=config.models.knn.metric[0] if isinstance(config.models.knn.metric, list) else config.models.knn.metric,
+            n_neighbors=config.models.knn.n_neighbors[0],
+            weights=config.models.knn.weights[0],
+            metric=config.models.knn.metric[0],
             n_jobs=-1
         )
 
