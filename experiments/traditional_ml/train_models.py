@@ -51,7 +51,7 @@ def load_datasets(config):
         root_dir=config.dataset.root_path,
         sample_rate=config.dataset.sample_rate,
         validate_files=False,
-        return_full_audio=True, 
+        return_full_audio=False, 
         max_duration=config.audio.max_duration
     )
     val_dataset = Artist20Dataset(
@@ -59,7 +59,7 @@ def load_datasets(config):
         root_dir=config.dataset.root_path,
         sample_rate=config.dataset.sample_rate,
         validate_files=False,
-        return_full_audio=True,
+        return_full_audio=False,
         max_duration=config.audio.max_duration
     )
 
@@ -235,7 +235,7 @@ def main(cfg: DictConfig):
 
             try:
                 # Optional: Run hyperparameter tuning
-                config = hyperparameter_tuning(model_type, config, train_data)
+                # config = hyperparameter_tuning(model_type, config, train_data)
 
                 # Train model
                 model, metrics = train_model(model_type, config, train_data, val_data, datasets[2])
