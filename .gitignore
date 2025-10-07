@@ -35,4 +35,4 @@ venv/
 env/
 
 # Inference pipeline
-inference_pipeline/*
+inference_pipeline/
