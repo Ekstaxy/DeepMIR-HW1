@@ -36,3 +36,4 @@ env/
 
 # Inference pipeline
 inference_pipeline/
+inference_pipeline/model/ckpt/
