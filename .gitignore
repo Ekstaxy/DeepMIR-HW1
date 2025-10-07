@@ -34,4 +34,5 @@ Thumbs.db
 venv/
 env/
 
-inference_pipeline/
+# Inference pipeline
+inference_pipeline/*
