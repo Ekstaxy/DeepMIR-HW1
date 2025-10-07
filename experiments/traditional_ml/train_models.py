@@ -51,7 +51,7 @@ def load_datasets(config):
         root_dir=config.dataset.root_path,
         sample_rate=config.dataset.sample_rate,
         validate_files=False,
-        return_full_audio=False, 
+        return_full_audio=True, 
         max_duration=config.audio.max_duration
     )
     val_dataset = Artist20Dataset(
@@ -59,7 +59,7 @@ def load_datasets(config):
         root_dir=config.dataset.root_path,
         sample_rate=config.dataset.sample_rate,
         validate_files=False,
-        return_full_audio=False,
+        return_full_audio=True,
         max_duration=config.audio.max_duration
     )
 
