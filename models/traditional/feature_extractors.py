@@ -448,7 +448,7 @@ def extract_features_from_dataset(dataset, config, save_path: Optional[str] = No
     # Process dataset in 500-sample batches to prevent RAM overflow
     all_features = []
     all_labels = []
-    batch_size = 500
+    batch_size = 100
 
     logger.info(f"Processing {len(dataset)} samples in batches of {batch_size}...")
 
