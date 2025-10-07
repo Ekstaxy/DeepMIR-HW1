@@ -7,6 +7,8 @@ from source_separation import separate_audio_inference
 from model_inference import load_model, infer
 from torchaudio.transforms import Resample
 import librosa
+import librosa.display
+import matplotlib.pyplot as plt
 
 # Hardcoded artist_to_id mapping
 artist_to_id = {
@@ -127,8 +129,32 @@ def run_inference(data_dir: str, model_path: str, output_dir: str):
 
 if __name__ == "__main__":
     # Example usage
-    run_inference(
-        data_dir="data/raw/artist20/test",
-        model_path="inference_pipeline/model/ckpt/ShortChunkCNNRes_ckpt_epoch_52.pt",  # Updated to point to the correct checkpoint file
-        output_dir="inference_pipeline/results"
+    # run_inference(
+    #     data_dir="inference_pipeline/data",
+    #     model_path="inference_pipeline/model/ckpt/ShortChunkCNNRes_ckpt_epoch_52.pt",  # Updated to point to the correct checkpoint file
+    #     output_dir="inference_pipeline/results"
+    # )
+
+    # Load your audio file
+    audio_path = 'inference_pipeline/data/01-Busted_Stuff_vocals.mp3'  # Change to your file path
+    y, sr = librosa.load(audio_path, sr=None, offset=80, duration=10)  # Load with original sample rate, limit to 30 seconds
+
+    # Compute mel-spectrogram
+    S = librosa.feature.melspectrogram(y=y, sr=sr, n_fft=4096, hop_length=512, fmin=80, fmax=8000, n_mels=80)
+    S_dB = librosa.power_to_db(S, ref=np.max)
+
+    # Display
+    plt.figure(figsize=(10, 4))
+    librosa.display.specshow(
+        S_dB, 
+        sr=sr, 
+        hop_length=512, 
+        x_axis='time', 
+        y_axis='mel', 
+        fmin=80, 
+        fmax=8000
     )
+    plt.colorbar(format='%+2.0f dB')
+    plt.title('Mel-Spectrogram of Dave Matthews Band - Busted Stuff (Vocals)')
+    plt.tight_layout()
+    plt.show()
